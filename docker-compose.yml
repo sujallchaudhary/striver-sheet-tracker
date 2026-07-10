@@ -1,0 +1,24 @@
+services:
+  dsa-tracker:
+    build: .
+    container_name: dsa-tracker
+    restart: unless-stopped
+    ports:
+      - "3210:3210"
+    volumes:
+      # Persists db.json (your progress, settings, API keys) on the host.
+      # The file is created automatically on first run from the CSV sheet.
+      - ./data:/data
+    environment:
+      - PORT=3210
+      - DSA_DATA_DIR=/data
+      # Pass API keys as env vars instead of storing them in db.json.
+      # Set these in a .env file (never commit .env to git).
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3210/api/dashboard"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

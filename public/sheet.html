@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A2Z Sheet — DSA Tracker</title>
+<style>
+  :root {
+    --page: #0f0f0e; --surface: #181817; --surface-2: #222221;
+    --ink: #e8e7e2; --ink-2: #a09f99; --muted: #5e5d57;
+    --grid: #2e2e2c; --border: rgba(255,255,255,0.07);
+    --accent: #3987e5; --accent-deep: #86b6ef; --accent-soft: #0e2f5c;
+    --good: #22c55e; --good-text: #22c55e;
+    --warn: #f59e0b; --serious: #f97316; --critical: #ef4444;
+    --header-h: 48px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --page: #f5f5f3; --surface: #ffffff; --surface-2: #f0efeb;
+      --ink: #0b0b0a; --ink-2: #52514e; --muted: #898781;
+      --grid: #e1e0d9; --border: rgba(11,11,11,0.08);
+      --accent: #2563eb; --accent-deep: #1c4fad; --accent-soft: #dbeafe;
+      --good: #16a34a; --good-text: #15803d;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--page); color: var(--ink);
+    font: 14px/1.5 "SF Pro Text", system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+  }
+
+  /* ── Topbar ── */
+  .topbar {
+    height: var(--header-h); min-height: var(--header-h);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px; border-bottom: 1px solid var(--border);
+    background: var(--surface); z-index: 20; flex-shrink: 0; gap: 16px;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 10px; }
+  .topbar-logo { font-size: 15px; font-weight: 700; letter-spacing: -.02em; }
+  .topbar-logo span { color: var(--accent); }
+  .topbar-sub { font-size: 12px; color: var(--muted); }
+  .topbar-nav-link {
+    font: 600 12px system-ui, sans-serif; color: var(--muted); text-decoration: none;
+    padding: 5px 11px; border-radius: 7px; border: 1px solid var(--grid);
+    transition: all .15s;
+  }
+  .topbar-nav-link:hover { color: var(--ink); border-color: var(--muted); }
+  .topbar-nav-link.active { color: var(--accent-deep); border-color: var(--accent); background: var(--accent-soft); }
+
+  /* ── Filter bar ── */
+  .filter-bar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 10px 20px; border-bottom: 1px solid var(--border);
+    background: var(--surface); flex-shrink: 0;
+  }
+  .filter-bar input[type="search"] {
+    flex: 1; min-width: 200px; padding: 6px 12px; border-radius: 8px;
+    border: 1px solid var(--grid); background: var(--surface-2);
+    color: var(--ink); font: 13px system-ui, sans-serif;
+  }
+  .filter-bar input[type="search"]:focus { outline: none; border-color: var(--accent); }
+  .filter-bar select {
+    padding: 6px 10px; border-radius: 8px; border: 1px solid var(--grid);
+    background: var(--surface-2); color: var(--ink); font: 13px system-ui, sans-serif;
+    cursor: pointer;
+  }
+  .filter-bar select:focus { outline: none; border-color: var(--accent); }
+  .filter-count { font-size: 12px; color: var(--muted); margin-left: auto; white-space: nowrap; }
+
+  /* ── Progress bar strip ── */
+  .progress-strip {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 20px; border-bottom: 1px solid var(--border);
+    background: var(--page); flex-shrink: 0; overflow-x: auto;
+  }
+  .progress-strip::-webkit-scrollbar { display: none; }
+  .prog-item { display: flex; flex-direction: column; gap: 3px; min-width: 120px; }
+  .prog-label { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prog-bar { height: 4px; border-radius: 99px; background: var(--grid); overflow: hidden; }
+  .prog-bar-fill { height: 100%; border-radius: 99px; background: var(--accent); }
+  .prog-nums { font-size: 10px; color: var(--muted); }
+
+  /* ── Table ── */
+  .table-wrap {
+    flex: 1; overflow-y: auto; overflow-x: auto;
+  }
+  .table-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+  .table-wrap::-webkit-scrollbar-track { background: transparent; }
+  .table-wrap::-webkit-scrollbar-thumb { background: var(--grid); border-radius: 99px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead { position: sticky; top: 0; z-index: 10; }
+  thead tr { background: var(--surface); }
+  th {
+    padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600;
+    letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+    user-select: none; cursor: pointer;
+  }
+  th:hover { color: var(--ink); }
+  th.sorted { color: var(--accent); }
+  th .sort-icon { opacity: .5; margin-left: 4px; font-size: 10px; }
+  th.sorted .sort-icon { opacity: 1; }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .1s;
+  }
+  tbody tr:hover { background: var(--surface-2); }
+  tbody tr.group-header { background: var(--surface); cursor: pointer; }
+  tbody tr.group-header:hover { background: var(--surface-2); }
+  tbody tr.group-hidden { display: none; }
+
+  td { padding: 9px 14px; color: var(--ink-2); vertical-align: middle; }
+  td.num { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+  td.title-cell { color: var(--ink); font-weight: 500; max-width: 320px; }
+  td.step-cell { max-width: 200px; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Group header row */
+  .group-header td {
+    padding: 8px 14px; font-size: 11.5px; font-weight: 700;
+    color: var(--ink-2); letter-spacing: .01em;
+  }
+  .group-header td:first-child { display: flex; align-items: center; gap: 8px; }
+  .group-chevron { font-size: 10px; color: var(--muted); transition: transform .2s; }
+  .group-header.open .group-chevron { transform: rotate(90deg); }
+  .group-prog { height: 5px; width: 80px; border-radius: 99px; background: var(--grid); overflow: hidden; display: inline-block; vertical-align: middle; }
+  .group-prog-fill { height: 100%; border-radius: 99px; background: var(--accent); }
+  .group-count { font-size: 11px; color: var(--muted); font-weight: 400; }
+
+  /* Difficulty badge */
+  .diff { font-size: 11px; padding: 2px 7px; border-radius: 99px; font-weight: 600; white-space: nowrap; }
+  .diff-Easy { color: var(--good); background: rgba(34,197,94,.1); }
+  .diff-Medium { color: var(--warn); background: rgba(245,158,11,.1); }
+  .diff-Hard { color: var(--critical); background: rgba(239,68,68,.1); }
+
+  /* Status chip */
+  .status-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 600; white-space: nowrap;
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .s-completed .dot, .s-solved_with_help .dot { background: var(--good); }
+  .s-attempted .dot { background: var(--serious); }
+  .s-revision_needed .dot { background: var(--warn); }
+  .s-pending .dot { background: var(--grid); }
+  .s-completed { color: var(--good-text); }
+  .s-solved_with_help { color: var(--good-text); }
+  .s-attempted { color: var(--ink-2); }
+  .s-revision_needed { color: var(--ink-2); }
+  .s-pending { color: var(--muted); }
+
+  /* Status select dropdown */
+  .status-select {
+    appearance: none; -webkit-appearance: none;
+    background: transparent; border: 1px solid var(--grid); border-radius: 6px;
+    color: var(--ink-2); font: 11.5px system-ui, sans-serif;
+    padding: 3px 8px; cursor: pointer; transition: border-color .15s;
+  }
+  .status-select:focus { outline: none; border-color: var(--accent); }
+  .status-select:hover { border-color: var(--muted); }
+
+  /* Links */
+  .links { display: flex; gap: 6px; }
+  .lnk {
+    font-size: 11px; color: var(--accent); text-decoration: none;
+    padding: 2px 7px; border-radius: 5px; border: 1px solid var(--accent-soft);
+    opacity: .8; transition: opacity .15s;
+  }
+  .lnk:hover { opacity: 1; }
+
+  /* Empty state */
+  .empty { padding: 60px 20px; text-align: center; color: var(--muted); font-size: 14px; }
+
+  @media (max-width: 760px) {
+    .progress-strip { display: none; }
+    td.step-cell, th.step-col { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">DSA <span>Tracker</span></div>
+    <div class="topbar-sub">Striver A2Z</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <a href="/" class="topbar-nav-link">Dashboard</a>
+    <a href="/sheet.html" class="topbar-nav-link active">Sheet</a>
+  </div>
+</div>
+
+<!-- Filter bar -->
+<div class="filter-bar">
+  <input type="search" id="searchInput" placeholder="Search problems…" autocomplete="off">
+  <select id="filterStatus">
+    <option value="">All statuses</option>
+    <option value="pending">Pending</option>
+    <option value="attempted">Attempted</option>
+    <option value="revision_needed">Revision needed</option>
+    <option value="solved_with_help">Solved w/ help</option>
+    <option value="completed">Completed</option>
+  </select>
+  <select id="filterDiff">
+    <option value="">All difficulties</option>
+    <option value="Easy">Easy</option>
+    <option value="Medium">Medium</option>
+    <option value="Hard">Hard</option>
+  </select>
+  <select id="filterStep" style="max-width:240px">
+    <option value="">All topics</option>
+  </select>
+  <span class="filter-count" id="filterCount"></span>
+</div>
+
+<!-- Progress strip -->
+<div class="progress-strip" id="progressStrip"></div>
+
+<!-- Table -->
+<div class="table-wrap">
+  <table id="sheetTable">
+    <thead>
+      <tr>
+        <th style="width:44px" data-col="order">#<span class="sort-icon">↕</span></th>
+        <th data-col="title">Title<span class="sort-icon">↕</span></th>
+        <th class="step-col" data-col="step">Topic<span class="sort-icon">↕</span></th>
+        <th style="width:90px" data-col="difficulty">Diff<span class="sort-icon">↕</span></th>
+        <th style="width:150px" data-col="status">Status<span class="sort-icon">↕</span></th>
+        <th style="width:160px">Links</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+  <div class="empty" id="emptyState" style="display:none">No problems match your filters.</div>
+</div>
+
+<script>
+const STATUS_LABEL = {
+  pending: 'Pending', attempted: 'Attempted', completed: 'Completed',
+  solved_with_help: 'Solved w/ help', revision_needed: 'Revision needed',
+};
+const VALID_STATUSES = ['pending', 'attempted', 'revision_needed', 'solved_with_help', 'completed'];
+const STATUS_ORDER = { completed: 0, solved_with_help: 1, revision_needed: 2, attempted: 3, pending: 4 };
+const DIFF_ORDER = { Easy: 0, Medium: 1, Hard: 2 };
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+let allProblems = [];
+let allSteps = [];
+let sortCol = 'order';
+let sortAsc = true;
+
+// Track open/closed groups (by step name)
+const collapsedGroups = new Set();
+
+async function loadSheet() {
+  const r = await fetch('/api/sheet');
+  const data = await r.json();
+  allProblems = data.problems;
+  allSteps = data.steps;
+
+  // Populate step filter
+  const stepSel = document.getElementById('filterStep');
+  for (const s of allSteps) {
+    const opt = document.createElement('option');
+    opt.value = s.step;
+    opt.textContent = s.step;
+    stepSel.appendChild(opt);
+  }
+
+  renderProgress();
+  renderTable();
+}
+
+function renderProgress() {
+  const strip = document.getElementById('progressStrip');
+  strip.innerHTML = allSteps.map((s) => {
+    const pct = s.total ? Math.round((s.done / s.total) * 100) : 0;
+    return `<div class="prog-item">
+      <div class="prog-label" title="${esc(s.step)}">${esc(s.step)}</div>
+      <div class="prog-bar"><div class="prog-bar-fill" style="width:${pct}%"></div></div>
+      <div class="prog-nums">${s.done}/${s.total}</div>
+    </div>`;
+  }).join('');
+}
+
+function getFilters() {
+  return {
+    search: document.getElementById('searchInput').value.toLowerCase().trim(),
+    status: document.getElementById('filterStatus').value,
+    diff:   document.getElementById('filterDiff').value,
+    step:   document.getElementById('filterStep').value,
+  };
+}
+
+function filteredProblems() {
+  const { search, status, diff, step } = getFilters();
+  return allProblems.filter((p) => {
+    if (status && p.status !== status) return false;
+    if (diff   && p.difficulty !== diff) return false;
+    if (step   && p.step !== step) return false;
+    if (search && !p.title.toLowerCase().includes(search) &&
+                  !p.step.toLowerCase().includes(search) &&
+                  !p.subsection.toLowerCase().includes(search)) return false;
+    return true;
+  });
+}
+
+function sortedProblems(probs) {
+  return [...probs].sort((a, b) => {
+    let av = a[sortCol], bv = b[sortCol];
+    if (sortCol === 'status')     { av = STATUS_ORDER[av] ?? 99; bv = STATUS_ORDER[bv] ?? 99; }
+    if (sortCol === 'difficulty') { av = DIFF_ORDER[av]   ?? 99; bv = DIFF_ORDER[bv]   ?? 99; }
+    if (av < bv) return sortAsc ? -1 : 1;
+    if (av > bv) return sortAsc ?  1 : -1;
+    return 0;
+  });
+}
+
+function renderTable() {
+  const filtered = filteredProblems();
+  const sorted   = sortedProblems(filtered);
+
+  // Update filter count
+  document.getElementById('filterCount').textContent =
+    `${sorted.length.toLocaleString()} / ${allProblems.length.toLocaleString()} problems`;
+
+  const tbody = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyState');
+
+  if (!sorted.length) {
+    tbody.innerHTML = '';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  // Group by step (preserve sort order within step, unless sorting by non-order col)
+  const isSortedByStep = (sortCol === 'order' || sortCol === 'step');
+  let rows = '';
+
+  if (isSortedByStep) {
+    // Build groups
+    const groups = [];
+    const groupMap = {};
+    for (const p of sorted) {
+      if (!groupMap[p.step]) {
+        groupMap[p.step] = [];
+        groups.push({ step: p.step, items: groupMap[p.step] });
+      }
+      groupMap[p.step].push(p);
+    }
+
+    for (const g of groups) {
+      const stepInfo = allSteps.find((s) => s.step === g.step) || { done: 0, total: g.items.length };
+      const pct = stepInfo.total ? Math.round((stepInfo.done / stepInfo.total) * 100) : 0;
+      const gId = 'g-' + g.step.replace(/\W+/g, '-');
+      const isOpen = !collapsedGroups.has(g.step);
+      rows += `<tr class="group-header${isOpen ? ' open' : ''}" data-group="${esc(g.step)}">
+        <td colspan="6">
+          <span class="group-chevron">▶</span>
+          <strong>${esc(g.step)}</strong>
+          <span class="group-prog"><span class="group-prog-fill" style="width:${pct}%"></span></span>
+          <span class="group-count">${stepInfo.done}/${stepInfo.total} done</span>
+        </td>
+      </tr>`;
+      for (const p of g.items) {
+        rows += problemRow(p, !isOpen);
+      }
+    }
+  } else {
+    // Flat sort — no grouping
+    for (const p of sorted) {
+      rows += problemRow(p, false);
+    }
+  }
+
+  tbody.innerHTML = rows;
+
+  // Wire up group headers
+  tbody.querySelectorAll('tr.group-header').forEach((row) => {
+    row.addEventListener('click', () => {
+      const step = row.dataset.group;
+      if (collapsedGroups.has(step)) collapsedGroups.delete(step);
+      else collapsedGroups.add(step);
+      renderTable();
+    });
+  });
+
+  // Wire up status selects
+  tbody.querySelectorAll('.status-select').forEach((sel) => {
+    sel.addEventListener('change', async () => {
+      const id = sel.dataset.id;
+      const status = sel.value;
+      sel.disabled = true;
+      try {
+        await fetch(`/api/problems/${id}/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status }),
+        });
+        // Update local data
+        const p = allProblems.find((x) => x.id === id);
+        if (p) p.status = status;
+        // Refresh progress strip
+        rebuildStepStats();
+        renderProgress();
+      } catch (e) {
+        console.error(e);
+      }
+      sel.disabled = false;
+    });
+  });
+}
+
+function problemRow(p, hidden) {
+  const statusOpts = VALID_STATUSES.map((s) =>
+    `<option value="${s}"${p.status === s ? ' selected' : ''}>${STATUS_LABEL[s]}</option>`
+  ).join('');
+
+  const links = [
+    p.url          ? `<a class="lnk" href="${esc(p.url)}"          target="_blank">TUF</a>`  : '',
+    p.practiceUrl  ? `<a class="lnk" href="${esc(p.practiceUrl)}"  target="_blank">LC</a>`   : '',
+    p.youtubeUrl   ? `<a class="lnk" href="${esc(p.youtubeUrl)}"   target="_blank">YT</a>`   : '',
+  ].filter(Boolean).join('');
+
+  return `<tr data-step="${esc(p.step)}"${hidden ? ' class="group-hidden"' : ''}>
+    <td class="num">${p.order + 1}</td>
+    <td class="title-cell">${esc(p.title)}<br><span style="font-size:11px;color:var(--muted)">${esc(p.subsection)}</span></td>
+    <td class="step-cell step-col" title="${esc(p.step)}">${esc(p.step)}</td>
+    <td><span class="diff diff-${esc(p.difficulty)}">${esc(p.difficulty)}</span></td>
+    <td>
+      <select class="status-select" data-id="${esc(p.id)}">${statusOpts}</select>
+    </td>
+    <td><div class="links">${links}</div></td>
+  </tr>`;
+}
+
+function rebuildStepStats() {
+  const DONE = ['completed', 'solved_with_help'];
+  const stepMap = {};
+  for (const p of allProblems) {
+    if (!stepMap[p.step]) stepMap[p.step] = { done: 0, total: 0 };
+    stepMap[p.step].total++;
+    if (DONE.includes(p.status)) stepMap[p.step].done++;
+  }
+  for (const s of allSteps) {
+    const m = stepMap[s.step] || { done: 0, total: 0 };
+    s.done = m.done; s.total = m.total;
+  }
+}
+
+// Sort on column header click
+document.querySelectorAll('th[data-col]').forEach((th) => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if (sortCol === col) sortAsc = !sortAsc;
+    else { sortCol = col; sortAsc = true; }
+    document.querySelectorAll('th').forEach((h) => h.classList.remove('sorted'));
+    th.classList.add('sorted');
+    th.querySelector('.sort-icon').textContent = sortAsc ? '↑' : '↓';
+    renderTable();
+  });
+});
+
+// Filter inputs
+['searchInput', 'filterStatus', 'filterDiff', 'filterStep'].forEach((id) => {
+  document.getElementById(id).addEventListener('input', renderTable);
+});
+
+loadSheet();
+</script>
+</body>
+</html>

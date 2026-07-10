@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSA Tracker</title>
+<style>
+  :root {
+    --page: #0f0f0e; --surface: #181817; --surface-2: #222221;
+    --ink: #e8e7e2; --ink-2: #a09f99; --muted: #5e5d57;
+    --grid: #2e2e2c; --border: rgba(255,255,255,0.07);
+    --accent: #3987e5; --accent-deep: #86b6ef; --accent-soft: #0e2f5c;
+    --good: #22c55e; --good-text: #22c55e;
+    --warn: #f59e0b; --serious: #f97316; --critical: #ef4444;
+    --panel-w: 340px;
+    --header-h: 48px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --page: #f5f5f3; --surface: #ffffff; --surface-2: #f0efeb;
+      --ink: #0b0b0a; --ink-2: #52514e; --muted: #898781;
+      --grid: #e1e0d9; --border: rgba(11,11,11,0.08);
+      --accent: #2563eb; --accent-deep: #1c4fad; --accent-soft: #dbeafe;
+      --good: #16a34a; --good-text: #15803d;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--page); color: var(--ink);
+    font: 14px/1.5 "SF Pro Text", system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+  }
+
+  /* ── Top bar ── */
+  .topbar {
+    height: var(--header-h); min-height: var(--header-h);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px; border-bottom: 1px solid var(--border);
+    background: var(--surface); z-index: 10; flex-shrink: 0;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 10px; }
+  .topbar-logo { font-size: 15px; font-weight: 700; letter-spacing: -.02em; }
+  .topbar-logo span { color: var(--accent); }
+  .topbar-sub { font-size: 12px; color: var(--muted); }
+  .topbar-date { font-size: 12px; color: var(--muted); }
+  .topbar-nav-link {
+    font: 600 12px system-ui, sans-serif; color: var(--muted); text-decoration: none;
+    padding: 5px 11px; border-radius: 7px; border: 1px solid var(--grid);
+    transition: all .15s;
+  }
+  .topbar-nav-link:hover { color: var(--ink); border-color: var(--muted); }
+  .topbar-nav-link.active { color: var(--accent-deep); border-color: var(--accent); background: var(--accent-soft); }
+
+  /* ── IDE body ── */
+  .ide-body { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+
+  /* ── Main panel (left) ── */
+  .main-panel { flex: 1; min-width: 0; overflow-y: auto; padding: 24px 28px 60px; }
+  .main-panel::-webkit-scrollbar { width: 6px; }
+  .main-panel::-webkit-scrollbar-track { background: transparent; }
+  .main-panel::-webkit-scrollbar-thumb { background: var(--grid); border-radius: 99px; }
+
+  h2 { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 28px 0 12px; }
+  h2:first-child { margin-top: 0; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+  .tile { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .tile .label { font-size: 11px; color: var(--muted); margin-bottom: 4px; font-weight: 500; }
+  .tile .value { font-size: 24px; font-weight: 700; line-height: 1; }
+  .tile .sub { font-size: 11px; color: var(--ink-2); margin-top: 4px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; transition: border-color .15s; }
+  .card:hover { border-color: var(--muted); }
+  .card-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .slot { color: var(--muted); font-weight: 600; font-size: 12px; }
+  .title { font-weight: 600; font-size: 14px; }
+  .badge { font-size: 10px; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--border); color: var(--ink-2); font-weight: 500; }
+  .badge.revision { background: var(--accent-soft); color: var(--accent-deep); border-color: transparent; }
+  .diff { font-size: 11px; color: var(--muted); }
+  .meta { font-size: 11.5px; color: var(--muted); margin: 4px 0 8px; }
+  .links { display: flex; margin-bottom: 10px; }
+  .links a { font-size: 11.5px; color: var(--accent); text-decoration: none; margin-right: 14px; opacity: .85; }
+  .links a:hover { opacity: 1; text-decoration: underline; }
+  .statuses { display: flex; gap: 5px; flex-wrap: wrap; }
+  .statuses button { font: 500 11.5px system-ui, sans-serif; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--grid); background: transparent; color: var(--ink-2); cursor: pointer; transition: all .12s; }
+  .statuses button:hover { border-color: var(--muted); color: var(--ink); }
+  .statuses button.active { background: var(--ink); color: var(--page); border-color: var(--ink); }
+
+  .status-chip { font-size: 11px; font-weight: 600; margin-left: auto; display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+  .dot { width: 7px; height: 7px; border-radius: 99px; }
+  .s-completed .dot { background: var(--good); } .s-completed { color: var(--good-text); }
+  .s-solved_with_help .dot { background: var(--good); } .s-solved_with_help { color: var(--good-text); }
+  .s-attempted .dot { background: var(--serious); } .s-attempted { color: var(--ink-2); }
+  .s-revision_needed .dot { background: var(--warn); } .s-revision_needed { color: var(--ink-2); }
+  .s-pending .dot { background: var(--grid); } .s-pending { color: var(--muted); }
+
+  .add-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+  .add-row input { flex: 1; min-width: 200px; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--grid); background: var(--surface); color: var(--ink); font: 13px system-ui, sans-serif; }
+  .add-row input:focus { outline: none; border-color: var(--accent); }
+
+  .mini-btn { padding: 6px 12px; border-radius: 7px; border: 1px solid var(--grid); background: transparent; color: var(--ink-2); font: 600 12px system-ui, sans-serif; cursor: pointer; transition: all .12s; }
+  .mini-btn:hover { border-color: var(--muted); color: var(--ink); }
+  .mini-btn:disabled { opacity: .4; cursor: default; }
+  .inline-result { font-size: 12px; color: var(--ink-2); }
+
+  .topic { display: flex; align-items: center; gap: 12px; padding: 5px 0; }
+  .topic .name { flex: 0 0 200px; font-size: 12.5px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar { flex: 1; height: 6px; border-radius: 99px; background: var(--grid); overflow: hidden; }
+  .bar > div { height: 100%; border-radius: 99px; background: var(--accent); transition: width .3s ease; }
+  .topic .count { flex: 0 0 65px; text-align: right; font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .hist-day { margin-bottom: 14px; }
+  .hist-date { font-size: 12px; font-weight: 600; color: var(--ink-2); margin-bottom: 4px; }
+  .hist-item { font-size: 12.5px; color: var(--ink-2); display: flex; gap: 6px; align-items: center; padding: 2px 0; }
+
+  .settings { margin-top: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  .settings summary { padding: 10px 16px; cursor: pointer; font-size: 13px; color: var(--ink-2); user-select: none; }
+  .settings-body { padding: 4px 16px 16px; border-top: 1px solid var(--grid); }
+  .setting-row { margin: 12px 0; }
+  .setting-row label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-2); margin-bottom: 5px; }
+  .setting-row .hint { font-weight: 400; color: var(--muted); }
+  .setting-row select, .setting-row input { padding: 6px 10px; border-radius: 7px; border: 1px solid var(--grid); background: var(--page); color: var(--ink); font: 13px system-ui, sans-serif; max-width: 100%; }
+  .topic-checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 2px 14px; }
+  .topic-checks label { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 400; color: var(--ink-2); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #saveSettings { margin-top: 8px; padding: 7px 16px; border-radius: 7px; border: none; background: var(--accent); color: #fff; font: 600 13px system-ui, sans-serif; cursor: pointer; }
+
+  /* ── Chat panel (right) ── */
+  .chat-panel {
+    width: var(--panel-w); flex-shrink: 0;
+    border-left: 1px solid var(--border);
+    background: var(--surface);
+    display: flex; flex-direction: column;
+    transition: width .28s cubic-bezier(.4,0,.2,1),
+                border-color .28s cubic-bezier(.4,0,.2,1);
+    overflow: hidden;
+  }
+  .chat-panel.collapsed {
+    width: 0;
+    border-left-color: transparent;
+  }
+  .chat-panel-header {
+    padding: 0 14px; height: var(--header-h); min-height: var(--header-h);
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border); flex-shrink: 0;
+    min-width: var(--panel-w);
+  }
+  .chat-panel-title {
+    font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
+    color: var(--muted); display: flex; align-items: center; gap: 7px;
+    white-space: nowrap;
+  }
+  .chat-panel-title .ai-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--good); box-shadow: 0 0 6px var(--good);
+    animation: pulse 2s ease infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .chat-mode-badge { font-size: 10px; padding: 2px 7px; border-radius: 99px; border: 1px solid var(--grid); color: var(--muted); font-weight: 500; }
+
+  /* Topbar chat toggle button */
+  #chatTopbarBtn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 11px; border-radius: 7px;
+    border: 1px solid var(--grid); background: transparent;
+    color: var(--muted); font: 600 12px system-ui, sans-serif;
+    cursor: pointer; transition: all .15s; white-space: nowrap;
+  }
+  #chatTopbarBtn:hover { color: var(--ink); border-color: var(--muted); }
+  #chatTopbarBtn.active {
+    background: var(--accent-soft); color: var(--accent-deep);
+    border-color: var(--accent);
+  }
+  #chatTopbarBtn .btn-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: currentColor;
+    animation: pulse 2s ease infinite;
+  }
+
+  .chat-messages { flex: 1; overflow-y: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-track { background: transparent; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--grid); border-radius: 99px; }
+
+  .msg { display: flex; flex-direction: column; gap: 2px; animation: msgIn .2s ease; }
+  @keyframes msgIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+  .msg-meta { font-size: 10px; color: var(--muted); }
+  .msg-bubble { padding: 8px 11px; border-radius: 10px; line-height: 1.5; word-break: break-word; font-size: 13px; white-space: pre-wrap; }
+  .msg.user { align-items: flex-end; }
+  .msg.user .msg-bubble { background: var(--accent); color: #fff; border-bottom-right-radius: 3px; white-space: normal; }
+  .msg.user .msg-meta { color: var(--accent-deep); }
+  .msg.assistant { align-items: flex-start; }
+  .msg.assistant .msg-bubble { background: var(--surface-2); color: var(--ink); border-bottom-left-radius: 3px; }
+  .msg.assistant.error .msg-bubble { background: rgba(239,68,68,.12); color: var(--critical); }
+
+  .msg-update { font-size: 11.5px; padding: 6px 0 0; border-top: 1px solid var(--grid); margin-top: 6px; display: flex; flex-direction: column; gap: 3px; }
+  .msg-update-item { display: flex; align-items: center; gap: 5px; color: var(--ink-2); }
+  .msg-update-item .dot { flex-shrink: 0; }
+
+  .typing-indicator .msg-bubble { display: flex; align-items: center; gap: 4px; }
+  .typing-indicator .dot-anim { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: bounce .9s ease infinite; }
+  .typing-indicator .dot-anim:nth-child(2) { animation-delay: .15s; }
+  .typing-indicator .dot-anim:nth-child(3) { animation-delay: .3s; }
+  @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-5px)} }
+
+  .chat-input-area { padding: 10px 12px 12px; border-top: 1px solid var(--border); flex-shrink: 0; }
+  .chat-hint-small { font-size: 10.5px; color: var(--muted); margin-bottom: 7px; line-height: 1.4; }
+  .chat-input-row { display: flex; gap: 7px; }
+  .chat-input-row textarea {
+    flex: 1; resize: none; padding: 8px 11px; border-radius: 8px;
+    border: 1px solid var(--grid); background: var(--surface-2);
+    color: var(--ink); font: 13px system-ui, sans-serif;
+    line-height: 1.45; min-height: 38px; max-height: 120px; overflow-y: auto;
+    transition: border-color .15s;
+  }
+  .chat-input-row textarea:focus { outline: none; border-color: var(--accent); }
+  .chat-input-row textarea::placeholder { color: var(--muted); }
+  #chatSendBtn {
+    padding: 0 12px; border-radius: 8px; border: none;
+    background: var(--accent); color: #fff; cursor: pointer;
+    font-size: 17px; flex-shrink: 0; align-self: flex-end; height: 38px;
+    transition: opacity .15s;
+  }
+  #chatSendBtn:disabled { opacity: .4; cursor: default; }
+  #chatSendBtn:hover:not(:disabled) { opacity: .85; }
+
+  @media (max-width: 760px) { .chat-panel { display: none; } }
+  @media (max-width: 640px) { .topic .name { flex-basis: 120px; } .main-panel { padding: 16px 14px 60px; } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">DSA <span>Tracker</span></div>
+    <div class="topbar-sub">Striver A2Z</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="topbar-date" id="date"></div>
+    <a href="/sheet.html" class="topbar-nav-link">Sheet</a>
+    <button id="chatTopbarBtn" title="Toggle chat assistant">
+      <span class="btn-dot"></span>
+      Chat
+    </button>
+  </div>
+</div>
+
+<div class="ide-body">
+
+  <!-- Left: main content -->
+  <div class="main-panel">
+
+    <h2>Overview</h2>
+    <div class="tiles" id="tiles"></div>
+
+    <h2>Today's Assignment</h2>
+    <div id="assignment"></div>
+    <div class="add-row" style="margin-top:8px">
+      <input id="addSearch" list="problemList" placeholder="Search a problem to add…">
+      <datalist id="problemList"></datalist>
+      <button type="button" class="mini-btn" id="addPick">Add</button>
+      <button type="button" class="mini-btn" id="addNext">＋ Next from queue</button>
+      <span class="inline-result" id="addResult"></span>
+    </div>
+
+    <h2>Topic Progress</h2>
+    <div id="topics"></div>
+
+    <h2>Recent Days</h2>
+    <div id="history"></div>
+
+    <details class="settings" id="settingsPanel">
+      <summary>⚙︎ Settings</summary>
+      <div class="settings-body">
+        <div class="setting-row">
+          <label>Problems per day</label>
+          <input type="number" id="setCount" min="3" max="8" style="width:70px">
+        </div>
+        <div class="setting-row">
+          <label>Current topic <span class="hint">(new problems come from here first)</span></label>
+          <select id="setCurrent"><option value="">Follow sheet order</option></select>
+        </div>
+        <div class="setting-row">
+          <label>Preferred topics <span class="hint">(prioritized after current topic)</span></label>
+          <div class="topic-checks" id="setPreferred"></div>
+        </div>
+        <div class="setting-row">
+          <label>Topics to revise <span class="hint">(finished problems cycle back every ~7 days)</span></label>
+          <div class="topic-checks" id="setRevision"></div>
+        </div>
+        <div class="setting-row">
+          <label>Chat AI provider <span class="hint">(falls back to keyword parsing without a key)</span></label>
+          <select id="setProvider">
+            <option value="auto">Auto (use whichever key is available)</option>
+            <option value="anthropic">Claude (Anthropic)</option>
+            <option value="gemini">Gemini</option>
+            <option value="none">Off — keyword parsing only</option>
+          </select>
+          <input type="password" id="setApiKey" placeholder="API key (or set ANTHROPIC_API_KEY / GEMINI_API_KEY env var)" style="margin-top:6px;width:100%">
+          <input type="text" id="setModel" placeholder="Model name (optional — default: claude-opus-4-8 / gemini-2.5-flash)" style="margin-top:6px;width:100%">
+        </div>
+        <div class="setting-row">
+          <label>Notion sync <span class="hint">(mirrors problems &amp; history to a Notion database)</span></label>
+          <input type="password" id="setNotionToken" placeholder="Notion integration secret (ntn_…)" style="width:100%">
+          <input type="text" id="setNotionPage" placeholder="Parent page URL or ID" style="margin-top:6px;width:100%">
+          <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <button type="button" class="mini-btn" id="notionSyncToday">Sync today</button>
+            <button type="button" class="mini-btn" id="notionSyncAll">Sync all history</button>
+            <span class="inline-result" id="notionResult"></span>
+          </div>
+        </div>
+        <button id="saveSettings">Save &amp; regenerate today</button>
+        <span class="inline-result" id="settingsResult" style="margin-left:10px"></span>
+      </div>
+    </details>
+
+  </div>
+
+  <!-- Right: chat panel -->
+  <div class="chat-panel" id="chatPanel">
+    <div class="chat-panel-header">
+      <div class="chat-panel-title">
+        <span class="ai-dot"></span>
+        Chat assistant
+      </div>
+      <span class="chat-mode-badge" id="chatModeBadge">loading…</span>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <div class="msg assistant">
+        <div class="msg-meta">Assistant</div>
+        <div class="msg-bubble">👋 Hey! Tell me what you solved today.
+
+e.g. "completed 1 and 3, couldn't crack 2" or "add two sum" or "remove problem 3"</div>
+      </div>
+    </div>
+
+    <div class="chat-input-area">
+      <div class="chat-hint-small" id="chatHint"></div>
+      <div class="chat-input-row">
+        <textarea id="chatInput" rows="1" placeholder="Tell me what you solved…"></textarea>
+        <button id="chatSendBtn" title="Send (Enter)">↑</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Chat panel collapse ─────────────────────────────────────────
+const chatPanel    = document.getElementById('chatPanel');
+const chatTopbarBtn = document.getElementById('chatTopbarBtn');
+
+function setChatCollapsed(collapsed) {
+  chatPanel.classList.toggle('collapsed', collapsed);
+  chatTopbarBtn.classList.toggle('active', !collapsed);
+  try { localStorage.setItem('chatCollapsed', collapsed ? '1' : '0'); } catch {}
+}
+
+chatTopbarBtn.addEventListener('click', () => setChatCollapsed(!chatPanel.classList.contains('collapsed')));
+
+// Restore saved state (default: open)
+try {
+  const saved = localStorage.getItem('chatCollapsed');
+  setChatCollapsed(saved === '1');
+} catch {
+  setChatCollapsed(false);
+}
+
+const STATUS_LABEL = {
+  pending: 'Pending', attempted: 'Attempted', completed: 'Completed',
+  solved_with_help: 'Solved w/ help', revision_needed: 'Revision needed',
+};
+const STATUS_COLOR = {
+  completed: 'var(--good)', solved_with_help: 'var(--good)',
+  attempted: 'var(--serious)', revision_needed: 'var(--warn)', pending: 'var(--grid)',
+};
+const BUTTONS = ['completed', 'solved_with_help', 'attempted', 'revision_needed'];
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+async function api(path, opts) {
+  const res = await fetch(path, opts);
+  if (!res.ok) {
+    const text = await res.text();
+    let msg = text;
+    try { msg = JSON.parse(text).error || text; } catch {}
+    throw new Error(msg);
+  }
+  return res.json();
+}
+
+function render(d) {
+  document.getElementById('date').textContent = new Date(d.date + 'T00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+
+  const s = d.stats;
+  document.getElementById('tiles').innerHTML = `
+    <div class="tile"><div class="label">Streak</div><div class="value">${s.streak}<span style="font-size:13px;color:var(--muted)"> day${s.streak===1?'':'s'}</span></div></div>
+    <div class="tile"><div class="label">Today</div><div class="value">${s.todayDone}<span style="font-size:13px;color:var(--muted)"> / ${s.todayTotal}</span></div></div>
+    <div class="tile"><div class="label">Solved overall</div><div class="value">${s.done}<span style="font-size:13px;color:var(--muted)"> / ${s.total}</span></div><div class="sub">${s.percent}% of sheet</div></div>
+    <div class="tile"><div class="label">Current topic</div><div class="value" style="font-size:13px;line-height:1.3;padding-top:2px">${esc(s.currentTopic)}</div><div class="sub">${esc(s.currentSubsection)}</div></div>`;
+
+  document.getElementById('assignment').innerHTML = d.items.map((it) => `
+    <div class="card">
+      <div class="card-top">
+        <span class="slot">#${it.slot}</span>
+        <span class="title">${esc(it.title)}</span>
+        <span class="badge ${it.type}">${it.type}</span>
+        <span class="diff">${esc(it.difficulty)}</span>
+        <span class="status-chip s-${it.status}"><span class="dot"></span>${STATUS_LABEL[it.status]}</span>
+      </div>
+      <div class="meta">${esc(it.step)} › ${esc(it.subsection)}</div>
+      <div class="links">
+        ${it.url ? `<a href="${esc(it.url)}" target="_blank">Problem ↗</a>` : ''}
+        ${it.practiceUrl ? `<a href="${esc(it.practiceUrl)}" target="_blank">Practice ↗</a>` : ''}
+        ${it.youtubeUrl ? `<a href="${esc(it.youtubeUrl)}" target="_blank">Video ↗</a>` : ''}
+      </div>
+      <div class="statuses">
+        ${BUTTONS.map((b) => `<button data-id="${esc(it.id)}" data-status="${b}" class="${it.status===b?'active':''}">${STATUS_LABEL[b]}</button>`).join('')}
+      </div>
+    </div>`).join('') || '<div class="card">Nothing assigned — the sheet is complete! 🎉</div>';
+
+  document.getElementById('topics').innerHTML = d.topics.map((t) => `
+    <div class="topic">
+      <span class="name" title="${esc(t.step)}">${esc(t.step)}</span>
+      <div class="bar"><div style="width:${t.total?(t.done/t.total)*100:0}%"></div></div>
+      <span class="count">${t.done} / ${t.total}</span>
+    </div>`).join('');
+
+  document.getElementById('history').innerHTML = d.history.map((h) => `
+    <div class="hist-day">
+      <div class="hist-date">${new Date(h.date+'T00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}</div>
+      ${h.items.map((it) => `<div class="hist-item"><span class="status-chip s-${it.status}"><span class="dot"></span></span>${esc(it.title)} <span style="color:var(--muted)">· ${STATUS_LABEL[it.status]}</span></div>`).join('')}
+    </div>`).join('') || '<div style="color:var(--muted);font-size:12.5px">History will appear here after your first day.</div>';
+
+  const modeMap = { anthropic: 'Claude', gemini: 'Gemini', rules: 'Keywords' };
+  document.getElementById('chatModeBadge').textContent = modeMap[d.chatMode] || d.chatMode;
+  document.getElementById('chatHint').textContent =
+    d.chatMode === 'rules'
+      ? 'Keyword mode — "completed 1, couldn\'t solve 2". Add an API key in Settings for AI.'
+      : `AI mode (${modeMap[d.chatMode]}) — write naturally.`;
+
+  renderSettings(d);
+
+  document.querySelectorAll('.statuses button').forEach((btn) => {
+    btn.onclick = async () => {
+      const r = await api(`/api/problems/${btn.dataset.id}/status`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ status: btn.dataset.status }),
+      });
+      render(r.dashboard);
+    };
+  });
+}
+
+function renderSettings(d) {
+  const panel = document.getElementById('settingsPanel');
+  if (panel.open && panel.dataset.populated) return;
+  panel.dataset.populated = '1';
+  const s = d.settings;
+  const steps = d.topics.map((t) => t.step);
+  document.getElementById('setCount').value = s.dailyCount;
+  document.getElementById('setProvider').value = s.provider;
+  const keyInput = document.getElementById('setApiKey');
+  if (document.activeElement !== keyInput) keyInput.value = s.apiKey;
+  document.getElementById('setModel').value = s.model || '';
+  const notionInput = document.getElementById('setNotionToken');
+  if (document.activeElement !== notionInput) notionInput.value = s.notionToken;
+  document.getElementById('setNotionPage').value = s.notionParentPageId || '';
+  const cur = document.getElementById('setCurrent');
+  cur.innerHTML = '<option value="">Follow sheet order</option>' +
+    steps.map((t) => `<option value="${esc(t)}" ${s.currentTopic===t?'selected':''}>${esc(t)}</option>`).join('');
+  const checks = (id, selected) => {
+    document.getElementById(id).innerHTML = steps.map((t) =>
+      `<label title="${esc(t)}"><input type="checkbox" value="${esc(t)}" ${selected.includes(t)?'checked':''}>${esc(t)}</label>`
+    ).join('');
+  };
+  checks('setPreferred', s.preferredTopics);
+  checks('setRevision', s.revisionTopics);
+}
+
+document.getElementById('saveSettings').onclick = async () => {
+  const checked = (id) => [...document.querySelectorAll(`#${id} input:checked`)].map((i) => i.value);
+  const r = await api('/api/settings', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      dailyCount: document.getElementById('setCount').value,
+      currentTopic: document.getElementById('setCurrent').value || null,
+      preferredTopics: checked('setPreferred'),
+      revisionTopics: checked('setRevision'),
+      provider: document.getElementById('setProvider').value,
+      apiKey: document.getElementById('setApiKey').value,
+      model: document.getElementById('setModel').value,
+      notionToken: document.getElementById('setNotionToken').value,
+      notionParentPageId: document.getElementById('setNotionPage').value,
+    }),
+  });
+  document.getElementById('settingsResult').textContent = '✓ Saved';
+  setTimeout(() => { document.getElementById('settingsResult').textContent = ''; }, 3000);
+  render(r.dashboard);
+};
+
+async function notionSync(scope, btn) {
+  const out = document.getElementById('notionResult');
+  btn.disabled = true; out.textContent = 'Syncing…';
+  try {
+    const res = await fetch('/api/notion/sync', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ scope, notionToken: document.getElementById('setNotionToken').value, notionParentPageId: document.getElementById('setNotionPage').value }),
+    });
+    const r = await res.json();
+    out.textContent = res.ok ? `✓ Synced ${r.synced} problem${r.synced===1?'':'s'} across ${r.days} day${r.days===1?'':'s'}` : `✗ ${r.error}`;
+  } catch (e) { out.textContent = '✗ ' + e.message; }
+  btn.disabled = false;
+}
+document.getElementById('notionSyncToday').onclick = (e) => notionSync('today', e.target);
+document.getElementById('notionSyncAll').onclick = (e) => notionSync('all', e.target);
+
+// ── Chat panel ──────────────────────────────────────────────────
+const chatMessages = document.getElementById('chatMessages');
+
+function timeStr() {
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function appendMsg(role, text, updates = [], adds = [], removes = [], isError = false) {
+  const div = document.createElement('div');
+  div.className = `msg ${role}${isError ? ' error' : ''}`;
+
+  const meta = document.createElement('div');
+  meta.className = 'msg-meta';
+  meta.textContent = (role === 'user' ? 'You' : 'Assistant') + ' · ' + timeStr();
+
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+  bubble.textContent = text;
+
+  const totalActions = updates.length + adds.length + removes.length;
+  if (totalActions > 0) {
+    const upd = document.createElement('div');
+    upd.className = 'msg-update';
+    upd.innerHTML = [
+      ...updates.map((u) =>
+        `<div class="msg-update-item"><span class="dot" style="background:${STATUS_COLOR[u.status]||'var(--grid)'}"></span><span>${esc(u.title)} → ${STATUS_LABEL[u.status]}</span></div>`
+      ),
+      ...adds.map((a) =>
+        `<div class="msg-update-item"><span style="color:var(--good);font-weight:700;font-size:13px;line-height:1">+</span><span style="color:var(--good)">${esc(a.title)} added</span></div>`
+      ),
+      ...removes.map((r) =>
+        `<div class="msg-update-item"><span style="color:var(--critical);font-weight:700;font-size:13px;line-height:1">−</span><span style="color:var(--ink-2)">${esc(r.title)} removed</span></div>`
+      ),
+    ].join('');
+    bubble.appendChild(upd);
+  }
+
+  div.appendChild(meta);
+  div.appendChild(bubble);
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  return div;
+}
+
+function showTyping() {
+  const div = document.createElement('div');
+  div.className = 'msg assistant typing-indicator';
+  div.innerHTML = `<div class="msg-meta">Assistant · ${timeStr()}</div><div class="msg-bubble"><span class="dot-anim"></span><span class="dot-anim"></span><span class="dot-anim"></span></div>`;
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  return div;
+}
+
+const PARSER_NAME = { anthropic: 'Claude', gemini: 'Gemini', rules: 'keyword parser' };
+
+async function sendChat() {
+  const textarea = document.getElementById('chatInput');
+  const btn = document.getElementById('chatSendBtn');
+  const msg = textarea.value.trim();
+  if (!msg) return;
+
+  appendMsg('user', msg);
+  textarea.value = '';
+  textarea.style.height = 'auto';
+  btn.disabled = true;
+
+  const typing = showTyping();
+  try {
+    const r = await api('/api/chat', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ message: msg }),
+    });
+    typing.remove();
+
+    const adds    = r.adds    || [];
+    const removes = r.removes || [];
+    const updates = r.updates || [];
+    const total   = updates.length + adds.length + removes.length;
+    const via     = `via ${PARSER_NAME[r.mode] || r.mode}`;
+
+    let replyText;
+    if (r.reply) {
+      replyText = r.reply + `\n(${via})`;
+    } else if (total > 0) {
+      const parts = [];
+      if (updates.length) parts.push(`${updates.length} status update${updates.length>1?'s':''}`);
+      if (adds.length)    parts.push(`${adds.length} problem${adds.length>1?'s':''} added`);
+      if (removes.length) parts.push(`${removes.length} problem${removes.length>1?'s':''} removed`);
+      replyText = `Done — ${parts.join(', ')}.\n(${via})`;
+    } else {
+      replyText = `No actions recognized — try "completed 1", "add two sum", or "remove problem 3".\n(${via})`;
+    }
+
+    appendMsg('assistant', replyText, updates, adds, removes);
+    render(r.dashboard);
+  } catch (e) {
+    typing.remove();
+    appendMsg('assistant', '✗ ' + e.message, [], [], [], true);
+  }
+  btn.disabled = false;
+  textarea.focus();
+}
+
+document.getElementById('chatSendBtn').onclick = sendChat;
+document.getElementById('chatInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+});
+document.getElementById('chatInput').addEventListener('input', function () {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+
+// ── Add a problem ──────────────────────────────────────────────
+let problemIndex = null;
+async function loadProblemList() {
+  if (problemIndex) return;
+  const problems = await api('/api/problems');
+  problemIndex = {};
+  document.getElementById('problemList').innerHTML = problems
+    .filter((p) => !['completed'].includes(p.status))
+    .map((p) => {
+      const label = `${p.title} — #${p.id}`;
+      problemIndex[label] = p.id;
+      return `<option value="${esc(label)}">${esc(p.step)}</option>`;
+    }).join('');
+}
+document.getElementById('addSearch').addEventListener('focus', () => loadProblemList().catch(() => {}));
+
+async function addToToday(problemId) {
+  const out = document.getElementById('addResult');
+  out.textContent = '⏳ Adding…';
+  try {
+    const r = await api('/api/assignment/add', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ problemId }),
+    });
+    out.textContent = `✓ Added "${r.added.title}"`;
+    document.getElementById('addSearch').value = '';
+    render(r.dashboard);
+  } catch (e) { out.textContent = '✗ ' + e.message; }
+}
+document.getElementById('addNext').onclick = () => addToToday(null);
+document.getElementById('addPick').onclick = async () => {
+  await loadProblemList().catch(() => {});
+  const val = document.getElementById('addSearch').value.trim();
+  if (!val) { document.getElementById('addResult').textContent = 'Type or pick a problem first.'; return; }
+  const id = problemIndex[val] || (val.match(/#(\d+)\s*$/) || [])[1];
+  if (!id) { document.getElementById('addResult').textContent = 'Pick a problem from the suggestions.'; return; }
+  addToToday(id);
+};
+
+api('/api/dashboard').then(render).catch((e) => {
+  document.getElementById('assignment').textContent = 'Failed to load: ' + e.message;
+});
+</script>
+</body>
+</html>

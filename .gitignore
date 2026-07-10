@@ -1,0 +1,24 @@
+# Editor/IDE configs
+.claude/
+
+# Dependencies
+node_modules/
+
+# Runtime data — contains your progress, API keys, and Notion tokens.
+# This is generated from the CSV on first run; never commit it.
+data/
+
+# Environment variables (API keys for docker-compose)
+.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
