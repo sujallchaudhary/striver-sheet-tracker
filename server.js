@@ -2,7 +2,7 @@
 const express = require('express');
 const path = require('path');
 
-const { getDb, loadDb, saveDb, todayStr, setStatus } = require('./lib/store');
+const { getDb, loadDb, saveDb, todayStr, setStatus, setRevision } = require('./lib/store');
 const { buildDashboard } = require('./lib/dashboard');
 const { addProblemToDay } = require('./lib/assignment');
 const { parseChat } = require('./lib/chat');
@@ -17,7 +17,17 @@ app.get('/api/dashboard', (req, res) => res.json(buildDashboard()));
 app.post('/api/problems/:id/status', (req, res) => {
   const p = setStatus(req.params.id, req.body.status, todayStr());
   if (!p) return res.status(400).json({ error: 'unknown problem or invalid status' });
-  console.log(`[status] "${p.title}" (${p.id}) -> ${p.status}`);
+  console.log(`[status] "${p.title}" (${p.id}) -> ${p.status}${p.revision ? ' +revision' : ''} (completed ${p.completionCount}x)`);
+  saveDb();
+  notion.scheduleAutoSync();
+  res.json({ ok: true, dashboard: buildDashboard() });
+});
+
+// Toggle the revision flag. Flagging ON marks the problem completed if it wasn't.
+app.post('/api/problems/:id/revision', (req, res) => {
+  const p = setRevision(req.params.id, Boolean(req.body.revision), todayStr());
+  if (!p) return res.status(400).json({ error: 'unknown problem' });
+  console.log(`[revision] "${p.title}" (${p.id}) -> ${p.revision ? 'flagged' : 'unflagged'} (status ${p.status})`);
   saveDb();
   notion.scheduleAutoSync();
   res.json({ ok: true, dashboard: buildDashboard() });
@@ -43,7 +53,7 @@ app.post('/api/chat', async (req, res) => {
 app.get('/api/problems', (req, res) => {
   res.json(getDb().problems.map((p) => ({
     id: p.id, title: p.title, step: p.step, status: p.status,
-    everCompleted: p.everCompleted, completionCount: p.completionCount,
+    revision: p.revision, everCompleted: p.everCompleted, completionCount: p.completionCount,
   })));
 });
 
@@ -57,7 +67,8 @@ app.get('/api/export', (req, res) => {
     version: 1,
     exportedAt: new Date().toISOString(),
     problems: db.problems.map((p) => ({
-      id: p.id, status: p.status, statusUpdatedAt: p.statusUpdatedAt,
+      id: p.id, status: p.status, revision: p.revision, revisionFlaggedAt: p.revisionFlaggedAt,
+      statusUpdatedAt: p.statusUpdatedAt,
       completionCount: p.completionCount, everCompleted: p.everCompleted,
       timesAssigned: p.timesAssigned, lastAssignedDate: p.lastAssignedDate,
     })),
@@ -81,11 +92,18 @@ app.post('/api/import', (req, res) => {
     const p = byId[String(imp.id)];
     if (!p) continue;
     p.status = ['pending', 'attempted', 'completed', 'solved_with_help', 'revision_needed'].includes(imp.status) ? imp.status : p.status;
+    p.revision = typeof imp.revision === 'boolean' ? imp.revision : p.revision;
+    p.revisionFlaggedAt = imp.revisionFlaggedAt ?? p.revisionFlaggedAt;
     p.statusUpdatedAt = imp.statusUpdatedAt ?? p.statusUpdatedAt;
     p.completionCount = imp.completionCount ?? p.completionCount;
     p.everCompleted = imp.everCompleted ?? p.everCompleted;
     p.timesAssigned = imp.timesAssigned ?? p.timesAssigned;
     p.lastAssignedDate = imp.lastAssignedDate ?? p.lastAssignedDate;
+    // Normalize old-format exports where revision was a status value.
+    if (p.status === 'revision_needed') {
+      p.revision = true;
+      p.status = p.everCompleted ? 'completed' : 'pending';
+    }
     restored++;
   }
   if (b.assignments && typeof b.assignments === 'object') db.assignments = b.assignments;

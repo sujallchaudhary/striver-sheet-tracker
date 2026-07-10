@@ -413,7 +413,8 @@ function render(d) {
         <span class="title">${esc(it.title)}</span>
         <span class="badge ${it.type}">${it.type}</span>
         <span class="diff">${esc(it.difficulty)}</span>
-        <span class="status-chip s-${it.status}"><span class="dot"></span>${STATUS_LABEL[it.status]}</span>
+        <span class="status-chip s-${it.status}"><span class="dot"></span>${STATUS_LABEL[it.status]}${(it.completionCount || 0) > 1 ? ` ×${it.completionCount}` : ''}</span>
+        ${it.revision ? '<span class="status-chip s-revision_needed">★ Revision</span>' : ''}
       </div>
       <div class="meta">${esc(it.step)} › ${esc(it.subsection)}</div>
       <div class="links">
@@ -422,7 +423,11 @@ function render(d) {
         ${it.youtubeUrl ? `<a href="${esc(it.youtubeUrl)}" target="_blank">Video ↗</a>` : ''}
       </div>
       <div class="statuses">
-        ${BUTTONS.map((b) => `<button data-id="${esc(it.id)}" data-status="${b}" class="${it.status===b?'active':''}">${STATUS_LABEL[b]}</button>`).join('')}
+        ${BUTTONS.map((b) => {
+          const active = b === 'revision_needed' ? it.revision : it.status === b;
+          const label = b === 'revision_needed' && it.revision ? 'Revision ✓' : STATUS_LABEL[b];
+          return `<button data-id="${esc(it.id)}" data-status="${b}" data-revision="${it.revision ? '1' : ''}" class="${active ? 'active' : ''}">${label}</button>`;
+        }).join('')}
       </div>
     </div>`).join('') || '<div class="card">Nothing assigned — the sheet is complete! 🎉</div>';
 
@@ -436,7 +441,7 @@ function render(d) {
   document.getElementById('history').innerHTML = d.history.map((h) => `
     <div class="hist-day">
       <div class="hist-date">${new Date(h.date+'T00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}</div>
-      ${h.items.map((it) => `<div class="hist-item"><span class="status-chip s-${it.status}"><span class="dot"></span></span>${esc(it.title)} <span style="color:var(--muted)">· ${STATUS_LABEL[it.status]}</span></div>`).join('')}
+      ${h.items.map((it) => `<div class="hist-item"><span class="status-chip s-${it.status}"><span class="dot"></span></span>${esc(it.title)} <span style="color:var(--muted)">· ${STATUS_LABEL[it.status]}${it.revision ? ' · ★ revision' : ''}</span></div>`).join('')}
     </div>`).join('') || '<div style="color:var(--muted);font-size:12.5px">History will appear here after your first day.</div>';
 
   const modeMap = { anthropic: 'Claude', gemini: 'Gemini', rules: 'Keywords' };
@@ -450,10 +455,15 @@ function render(d) {
 
   document.querySelectorAll('.statuses button').forEach((btn) => {
     btn.onclick = async () => {
-      const r = await api(`/api/problems/${btn.dataset.id}/status`, {
-        method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ status: btn.dataset.status }),
-      });
+      const r = btn.dataset.status === 'revision_needed'
+        ? await api(`/api/problems/${btn.dataset.id}/revision`, {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ revision: !btn.dataset.revision }),
+          })
+        : await api(`/api/problems/${btn.dataset.id}/status`, {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ status: btn.dataset.status }),
+          });
       render(r.dashboard);
     };
   });
@@ -663,7 +673,7 @@ async function loadProblemList() {
   const problems = await api('/api/problems');
   problemIndex = {};
   document.getElementById('problemList').innerHTML = problems
-    .filter((p) => !['completed'].includes(p.status))
+    .filter((p) => p.status !== 'completed' || p.revision) // unfinished + revision-flagged are addable
     .map((p) => {
       const label = `${p.title} — #${p.id}`;
       problemIndex[label] = p.id;

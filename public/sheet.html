@@ -338,9 +338,8 @@ const STATUS_DOT_COLOR = {
 };
 const VALID_STATUSES = ['pending', 'attempted', 'revision_needed', 'solved_with_help', 'completed'];
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-// Revision after completing still counts as done — progress is never lost.
-const isDone = (p) => p.status === 'completed' || p.status === 'solved_with_help' ||
-  (p.status === 'revision_needed' && p.everCompleted);
+// Revision is a flag on top of the status; flagged problems are always completed.
+const isDone = (p) => p.status === 'completed' || p.status === 'solved_with_help';
 
 let allProblems = [];
 
@@ -421,7 +420,8 @@ function getFiltered() {
   const status = document.getElementById('filterStatus').value;
   const diff = document.getElementById('filterDiff').value;
   return allProblems.filter((p) => {
-    if (status && p.status !== status) return false;
+    if (status === 'revision_needed') { if (!p.revision) return false; }
+    else if (status && p.status !== status) return false;
     if (diff && p.difficulty !== diff) return false;
     if (search && !p.title.toLowerCase().includes(search) &&
                   !p.step.toLowerCase().includes(search) &&
@@ -495,8 +495,7 @@ function problemRow(p) {
   const done = isDone(p);
   const btnClass =
     done ? 'done' + (p.status === 'solved_with_help' ? ' help' : '') :
-    p.status === 'attempted' ? 'attempted' :
-    p.status === 'revision_needed' ? 'revision' : '';
+    p.status === 'attempted' ? 'attempted' : '';
   const countBadge = (p.completionCount || 0) > 1
     ? `<span class="count-badge" title="Completed ${p.completionCount} times">×${p.completionCount}</span>` : '';
 
@@ -529,7 +528,8 @@ function problemRow(p) {
     <td class="td-res"><div class="res-links">${res}</div></td>
     <td class="td-prac">${practice}</td>
     <td class="td-rev c">
-      <button class="rev-btn${p.status === 'revision_needed' ? ' on' : ''}" data-id="${esc(p.id)}" data-status="${esc(p.status)}" title="Toggle revision">
+      <button class="rev-btn${p.revision ? ' on' : ''}" data-id="${esc(p.id)}" data-rev="${p.revision ? '1' : ''}"
+              title="${p.revision ? 'In revision — click to unflag' : 'Flag for revision (marks completed)'}">
         <svg viewBox="0 0 24 24"><path class="star-shape" d="M12 2.5l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5L12 17.4l-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95L12 2.5z"/></svg>
       </button>
     </td>
@@ -547,9 +547,7 @@ document.getElementById('sheetWrap').addEventListener('click', (e) => {
 
   const revBtn = e.target.closest('.rev-btn');
   if (revBtn) {
-    // Star ON = revision_needed. Turning it off returns the problem to completed.
-    const next = revBtn.dataset.status === 'revision_needed' ? 'completed' : 'revision_needed';
-    updateStatus(revBtn.dataset.id, next);
+    toggleRevision(revBtn.dataset.id, !revBtn.dataset.rev);
     return;
   }
 
@@ -628,12 +626,34 @@ async function updateStatus(id, status) {
       body: JSON.stringify({ status }),
     });
     if (!r.ok) throw new Error(await r.text());
-    const p = allProblems.find((x) => x.id === id);
-    if (p) p.status = status;
-    render();
+    await refreshProblem(id);
   } catch (e) {
     console.error('Failed to update status:', e);
   }
+}
+
+async function toggleRevision(id, on) {
+  try {
+    const r = await fetch(`/api/problems/${id}/revision`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ revision: on }),
+    });
+    if (!r.ok) throw new Error(await r.text());
+    await refreshProblem(id);
+  } catch (e) {
+    console.error('Failed to toggle revision:', e);
+  }
+}
+
+// Re-fetch the canonical problem state (status, revision flag, completion count)
+// so local state matches the server's rules (e.g. flag → auto-complete).
+async function refreshProblem(id) {
+  const list = await (await fetch('/api/problems')).json();
+  const fresh = list.find((x) => x.id === id);
+  const p = allProblems.find((x) => x.id === id);
+  if (p && fresh) Object.assign(p, fresh);
+  render();
 }
 
 ['searchInput', 'filterStatus', 'filterDiff'].forEach((id) => {
