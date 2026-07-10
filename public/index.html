@@ -93,6 +93,8 @@
   .s-attempted .dot { background: var(--serious); } .s-attempted { color: var(--ink-2); }
   .s-revision_needed .dot { background: var(--warn); } .s-revision_needed { color: var(--ink-2); }
   .s-pending .dot { background: var(--grid); } .s-pending { color: var(--muted); }
+  .s-needs_resolve .dot { background: var(--warn); animation: pulse 2s ease infinite; } .s-needs_resolve { color: var(--warn); }
+  .s-re_solved .dot { background: var(--good); } .s-re_solved { color: var(--good-text); }
 
   .add-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
   .add-row input { flex: 1; min-width: 200px; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--grid); background: var(--surface); color: var(--ink); font: 13px system-ui, sans-serif; }
@@ -406,14 +408,26 @@ function render(d) {
     <div class="tile"><div class="label">Solved overall</div><div class="value">${s.done}<span style="font-size:13px;color:var(--muted)"> / ${s.total}</span></div><div class="sub">${s.percent}% of sheet</div></div>
     <div class="tile"><div class="label">Current topic</div><div class="value" style="font-size:13px;line-height:1.3;padding-top:2px">${esc(s.currentTopic)}</div><div class="sub">${esc(s.currentSubsection)}</div></div>`;
 
-  document.getElementById('assignment').innerHTML = d.items.map((it) => `
+  document.getElementById('assignment').innerHTML = d.items.map((it) => {
+    // For revision items, show "Needs re-solve" or "Re-solved ✓" instead of the global status.
+    let statusChipHtml;
+    if (it.type === 'revision') {
+      if (it.completedToday) {
+        statusChipHtml = '<span class="status-chip s-re_solved"><span class="dot"></span>Re-solved ✓</span>';
+      } else {
+        statusChipHtml = '<span class="status-chip s-needs_resolve"><span class="dot"></span>Needs re-solve</span>';
+      }
+    } else {
+      statusChipHtml = `<span class="status-chip s-${it.status}"><span class="dot"></span>${STATUS_LABEL[it.status]}${(it.completionCount || 0) > 1 ? ` ×${it.completionCount}` : ''}</span>`;
+    }
+    return `
     <div class="card">
       <div class="card-top">
         <span class="slot">#${it.slot}</span>
         <span class="title">${esc(it.title)}</span>
         <span class="badge ${it.type}">${it.type}</span>
         <span class="diff">${esc(it.difficulty)}</span>
-        <span class="status-chip s-${it.status}"><span class="dot"></span>${STATUS_LABEL[it.status]}${(it.completionCount || 0) > 1 ? ` ×${it.completionCount}` : ''}</span>
+        ${statusChipHtml}
         ${it.revision ? '<span class="status-chip s-revision_needed">★ Revision</span>' : ''}
       </div>
       <div class="meta">${esc(it.step)} › ${esc(it.subsection)}</div>
@@ -429,7 +443,8 @@ function render(d) {
           return `<button data-id="${esc(it.id)}" data-status="${b}" data-revision="${it.revision ? '1' : ''}" class="${active ? 'active' : ''}">${label}</button>`;
         }).join('')}
       </div>
-    </div>`).join('') || '<div class="card">Nothing assigned — the sheet is complete! 🎉</div>';
+    </div>`;
+  }).join('') || '<div class="card">Nothing assigned — the sheet is complete! 🎉</div>';
 
   document.getElementById('topics').innerHTML = d.topics.map((t) => `
     <div class="topic">
