@@ -6,32 +6,32 @@
 <title>A2Z Sheet — DSA Tracker</title>
 <style>
   :root {
-    --bg: #0c0c0b;
-    --surface: #141413;
-    --surface-2: #1c1c1b;
-    --surface-3: #242422;
+    --bg: #131312;
+    --surface: #1a1a19;
+    --surface-2: #222220;
+    --surface-3: #2b2b29;
     --ink: #e8e7e2;
-    --ink-2: #a09f99;
-    --muted: #5a5955;
-    --border: rgba(255,255,255,0.06);
-    --border-2: rgba(255,255,255,0.04);
+    --ink-2: #b7b5ae;
+    --muted: #6b6a64;
+    --border: rgba(255,255,255,0.07);
+    --border-2: rgba(255,255,255,0.045);
     --accent: #f97316;
     --accent-dim: rgba(249,115,22,0.15);
-    --good: #22c55e;
-    --warn: #f59e0b;
-    --critical: #ef4444;
-    --header-h: 48px;
+    --easy: #22c55e;
+    --medium: #eab308;
+    --hard: #f43f5e;
+    --track: #3a3a37;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: var(--bg); color: var(--ink);
-    font: 13.5px/1.5 "SF Pro Text", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font: 14px/1.5 "SF Pro Text", system-ui, -apple-system, "Segoe UI", sans-serif;
     display: flex; flex-direction: column; height: 100vh; overflow: hidden;
   }
 
   /* ── Topbar ── */
   .topbar {
-    height: var(--header-h); flex-shrink: 0;
+    height: 46px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: space-between;
     padding: 0 20px; border-bottom: 1px solid var(--border);
     background: var(--surface);
@@ -47,6 +47,33 @@
   }
   .nav-link:hover { color: var(--ink); border-color: var(--muted); }
   .nav-link.active { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
+
+  /* ── Progress band (matches TUF header) ── */
+  .progress-band {
+    flex-shrink: 0;
+    display: flex; align-items: center; gap: 16px;
+    padding: 12px 24px;
+    background: linear-gradient(180deg, #2a1510 0%, #20110d 100%);
+    border-bottom: 1px solid rgba(0,0,0,.5);
+  }
+  .ring-wrap { position: relative; width: 62px; height: 62px; flex-shrink: 0; }
+  .ring-wrap svg { transform: rotate(-90deg); }
+  .ring-track { stroke: rgba(255,255,255,.12); }
+  .ring-fill { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset .6s ease; }
+  .ring-inner {
+    position: absolute; inset: 5px; border-radius: 50%;
+    background: #171310;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: #fff;
+  }
+  .band-main .band-label { font-size: 13.5px; color: var(--ink-2); }
+  .band-main .band-count { font-size: 15px; font-weight: 700; color: #fff; margin-top: 1px; }
+  .band-main .band-count span { color: var(--muted); font-weight: 500; }
+  .band-diffs { margin-left: auto; display: flex; gap: 26px; align-items: center; flex-wrap: wrap; }
+  .band-diff { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: #fff; }
+  .band-diff .dot { width: 9px; height: 9px; border-radius: 50%; }
+  .band-diff b { font-weight: 700; }
+  .band-diff span { color: var(--muted); font-weight: 500; }
 
   /* ── Filter bar ── */
   .filter-bar {
@@ -68,171 +95,141 @@
     color: var(--ink); font: 13px system-ui, sans-serif; cursor: pointer;
   }
   .filter-bar select:focus { outline: none; border-color: var(--accent); }
-  .filter-count { font-size: 12px; color: var(--muted); margin-left: auto; }
-  .filter-stats { display: flex; gap: 16px; font-size: 12px; margin-left: auto; }
-  .filter-stat { color: var(--muted); }
-  .filter-stat strong { color: var(--ink-2); font-weight: 600; }
+  .expand-btn {
+    font: 600 12px system-ui, sans-serif; color: var(--muted); cursor: pointer;
+    background: transparent; border: 1px solid rgba(255,255,255,0.08);
+    padding: 5px 11px; border-radius: 7px; margin-left: auto;
+  }
+  .expand-btn:hover { color: var(--ink); border-color: var(--muted); }
 
   /* ── Scroll container ── */
-  .sheet-wrap { flex: 1; overflow-y: auto; overflow-x: hidden; }
+  .sheet-wrap { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: 60px; }
   .sheet-wrap::-webkit-scrollbar { width: 5px; }
   .sheet-wrap::-webkit-scrollbar-track { background: transparent; }
   .sheet-wrap::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 99px; }
 
-  /* ── Step group ── */
-  .step-group { border-bottom: 1px solid var(--border); }
-
+  /* ── Step / subsection rows (flat, like TUF) ── */
   .step-header {
-    display: flex; align-items: center; gap: 12px;
-    padding: 13px 20px; cursor: pointer;
-    user-select: none; position: sticky; top: 0; z-index: 5;
-    background: var(--surface); border-bottom: 1px solid var(--border);
-    transition: background .1s;
+    display: flex; align-items: center; gap: 14px;
+    padding: 15px 24px; cursor: pointer; user-select: none;
   }
-  .step-header:hover { background: var(--surface-2); }
-  .step-chevron {
-    width: 16px; height: 16px; flex-shrink: 0;
-    color: var(--muted); transition: transform .2s;
+  .step-header:hover { background: rgba(255,255,255,.025); }
+  .chev {
+    width: 14px; height: 14px; flex-shrink: 0; color: var(--ink-2);
     display: flex; align-items: center; justify-content: center;
+    transition: transform .18s ease;
   }
-  .step-header.open .step-chevron { transform: rotate(90deg); }
-  .step-name { font-size: 14px; font-weight: 700; color: var(--ink); flex: 1; }
-  .step-prog-wrap { display: flex; align-items: center; gap: 10px; }
-  .step-prog-bar { width: 120px; height: 4px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
-  .step-prog-fill { height: 100%; border-radius: 99px; background: var(--accent); transition: width .4s ease; }
-  .step-count { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .open > .chev { transform: rotate(90deg); }
+  .step-name { font-size: 15px; font-weight: 600; color: var(--ink); flex: 1; letter-spacing: .01em; }
 
-  /* ── Subsection ── */
-  .subsection { }
-  .subsection.hidden { display: none; }
+  .prog-wrap { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+  .prog-bar { width: 110px; height: 5px; border-radius: 99px; background: var(--track); overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 99px; background: var(--accent); transition: width .4s ease; }
+  .prog-count { font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 58px; text-align: right; }
+  .prog-count span { color: var(--muted); }
 
   .sub-header {
-    display: flex; align-items: center; gap: 10px;
-    padding: 9px 20px 9px 40px; cursor: pointer;
-    user-select: none; background: var(--surface-2);
-    border-bottom: 1px solid var(--border-2);
-    transition: background .1s;
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 24px 11px 46px; cursor: pointer; user-select: none;
   }
-  .sub-header:hover { background: var(--surface-3); }
-  .sub-chevron {
-    width: 12px; height: 12px; flex-shrink: 0;
-    color: var(--muted); transition: transform .2s;
-    display: flex; align-items: center; justify-content: center; font-size: 9px;
+  .sub-header:hover { background: rgba(255,255,255,.025); }
+  .sub-header .chev { width: 12px; height: 12px; }
+  .sub-name { font-size: 13.5px; font-weight: 500; color: var(--ink); flex: 1; }
+  .sub-header .prog-bar { width: 110px; height: 4px; }
+  .sub-header .prog-count { font-size: 12.5px; }
+
+  .hidden { display: none; }
+
+  /* ── Problem table card ── */
+  .table-card {
+    margin: 4px 24px 20px 46px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
   }
-  .sub-header.open .sub-chevron { transform: rotate(90deg); }
-  .sub-name { font-size: 12.5px; font-weight: 600; color: var(--ink-2); flex: 1; }
-  .sub-prog-bar { width: 80px; height: 3px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
-  .sub-prog-fill { height: 100%; border-radius: 99px; background: var(--accent); transition: width .4s ease; }
-  .sub-count { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
-
-  /* ── Table inside subsection ── */
-  .sub-table-wrap { background: var(--bg); }
-  .sub-table-wrap.hidden { display: none; }
-
   table { width: 100%; border-collapse: collapse; }
-  .table-header-row {
-    background: var(--surface-2);
-    border-bottom: 1px solid var(--border);
-  }
-  .table-header-row th {
-    padding: 7px 14px; text-align: left;
-    font-size: 11px; font-weight: 600; letter-spacing: .06em;
-    text-transform: uppercase; color: var(--muted);
+  thead tr { border-bottom: 1px solid var(--border); }
+  th {
+    padding: 12px 14px; text-align: left;
+    font-size: 12.5px; font-weight: 600; color: var(--ink-2);
     white-space: nowrap;
   }
-
-  tbody tr {
-    border-bottom: 1px solid var(--border-2);
-    transition: background .08s;
-  }
-  tbody tr:hover { background: var(--surface-2); }
+  th.c, td.c { text-align: center; }
+  tbody tr { border-bottom: 1px solid var(--border-2); transition: background .08s; }
+  tbody tr:hover { background: rgba(255,255,255,.02); }
   tbody tr:last-child { border-bottom: none; }
+  td { padding: 13px 14px; vertical-align: middle; }
 
-  td { padding: 10px 14px; vertical-align: middle; }
-
-  /* Status checkbox cell */
-  .td-status { width: 48px; text-align: center; padding: 10px 8px; }
+  /* Status checkbox */
+  .td-status { width: 64px; }
   .status-btn {
-    width: 22px; height: 22px; border-radius: 5px; border: none;
-    cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
-    transition: all .15s; position: relative; background: transparent; padding: 0;
+    width: 19px; height: 19px; border-radius: 4px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 2px solid #55534e; background: transparent; padding: 0;
+    transition: all .12s;
   }
-  .status-btn:focus { outline: none; }
-
-  /* Status icons */
-  .status-icon { width: 20px; height: 20px; border-radius: 4px; }
-  .status-icon.pending {
-    border: 2px solid var(--muted); background: transparent;
+  .status-btn:hover { border-color: var(--accent); }
+  .status-btn.done { background: var(--accent); border-color: var(--accent); }
+  .status-btn.attempted { border-color: var(--medium); }
+  .status-btn.revision { border-color: var(--accent); }
+  .status-btn .check {
+    width: 9px; height: 6px; border-left: 2px solid #fff; border-bottom: 2px solid #fff;
+    transform: rotate(-45deg) translate(0.5px, -1px); display: none;
   }
-  .status-icon.pending:hover { border-color: var(--accent); }
-  .status-icon.attempted {
-    border: 2px solid var(--warn); background: transparent;
-    position: relative;
-  }
-  .status-icon.completed, .status-icon.solved_with_help {
-    background: var(--accent); border: 2px solid var(--accent);
-  }
-  .status-icon.revision_needed {
-    background: transparent; border: 2px solid var(--accent);
-  }
-  .checkmark {
-    width: 10px; height: 8px;
-    border-left: 2px solid #fff; border-bottom: 2px solid #fff;
-    transform: rotate(-45deg) translate(1px, -1px);
-    display: none;
-  }
-  .status-icon.completed .checkmark,
-  .status-icon.solved_with_help .checkmark { display: block; }
-
-  /* help dot for solved_with_help */
-  .status-icon.solved_with_help {
-    background: var(--accent); opacity: .7;
-  }
-
-  /* revision star */
-  .rev-star { font-size: 11px; color: var(--accent); }
-
-  /* attempt dash */
-  .att-dash { width: 8px; height: 2px; background: var(--warn); border-radius: 99px; }
+  .status-btn.done .check { display: block; }
+  .status-btn .dash { width: 8px; height: 2px; background: var(--medium); border-radius: 99px; display: none; }
+  .status-btn.attempted .dash { display: block; }
+  .status-btn.done.help { opacity: .68; }
 
   /* Problem name */
-  .td-title { min-width: 200px; max-width: 380px; }
-  .problem-name { font-weight: 500; color: var(--ink); font-size: 13.5px; }
-  .problem-name.done { color: var(--ink-2); }
+  .problem-name { font-size: 14px; font-weight: 450; color: var(--ink); }
+  .count-badge {
+    margin-left: 8px; font-size: 10.5px; font-weight: 700; color: var(--accent);
+    background: var(--accent-dim); border-radius: 99px; padding: 1px 6px; vertical-align: 1px;
+  }
 
   /* Solve link */
-  .td-solve { width: 70px; }
-  .solve-link {
-    font-size: 12.5px; font-weight: 600; color: var(--accent);
-    text-decoration: none; transition: opacity .15s;
-  }
-  .solve-link:hover { opacity: .7; }
-  .solve-dash { color: var(--muted); font-size: 12px; }
+  .td-solve { width: 80px; }
+  .solve-link { font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none; }
+  .solve-link:hover { opacity: .75; }
 
-  /* Resource icons */
-  .td-res { width: 100px; }
-  .res-links { display: flex; gap: 6px; align-items: center; }
-  .res-icon {
+  /* Resource / practice icons */
+  .td-res { width: 110px; }
+  .td-prac { width: 90px; }
+  .res-links { display: flex; gap: 9px; align-items: center; }
+  .icon-link { display: inline-flex; align-items: center; text-decoration: none; transition: opacity .15s; }
+  .icon-link:hover { opacity: .75; }
+  .yt-badge {
+    width: 27px; height: 19px; border-radius: 4px; background: #e02f2f;
     display: inline-flex; align-items: center; justify-content: center;
-    width: 26px; height: 20px; border-radius: 4px;
-    font-size: 11px; font-weight: 700; text-decoration: none;
-    transition: opacity .15s; letter-spacing: -.01em;
   }
-  .res-icon:hover { opacity: .8; }
-  .res-icon.yt { background: #ff0000; color: #fff; font-size: 9px; }
-  .res-icon.tuf { background: var(--accent); color: #fff; font-size: 9px; }
-  .res-icon.lc { background: #ffa116; color: #fff; font-size: 9px; }
-  .res-none { color: var(--muted); font-size: 12px; }
+  .yt-badge::after {
+    content: ''; border-left: 7px solid #fff;
+    border-top: 4.5px solid transparent; border-bottom: 4.5px solid transparent;
+    margin-left: 1px;
+  }
+  .doc-icon { color: #c9c7c0; }
+  .none-dash { color: var(--muted); font-size: 13px; letter-spacing: 1px; }
 
-  /* Difficulty */
-  .td-diff { width: 88px; }
+  /* Revision star */
+  .td-rev { width: 80px; }
+  .rev-btn { background: none; border: none; cursor: pointer; padding: 2px; display: inline-flex; }
+  .rev-btn svg { width: 18px; height: 18px; }
+  .rev-btn .star-shape { fill: none; stroke: #6b6a64; stroke-width: 1.6; transition: all .15s; }
+  .rev-btn:hover .star-shape { stroke: var(--accent); }
+  .rev-btn.on .star-shape { fill: var(--accent); stroke: var(--accent); }
+
+  /* Difficulty chip */
+  .td-diff { width: 96px; }
   .diff {
-    display: inline-block; padding: 2px 10px; border-radius: 99px;
-    font-size: 11.5px; font-weight: 600;
+    display: inline-block; padding: 3px 14px; border-radius: 6px;
+    font-size: 12.5px; font-weight: 600;
+    background: rgba(255,255,255,.05);
   }
-  .diff-Easy { color: var(--good); border: 1px solid rgba(34,197,94,.25); background: rgba(34,197,94,.08); }
-  .diff-Medium { color: var(--warn); border: 1px solid rgba(245,158,11,.25); background: rgba(245,158,11,.08); }
-  .diff-Hard { color: var(--critical); border: 1px solid rgba(239,68,68,.25); background: rgba(239,68,68,.08); }
+  .diff-Easy { color: var(--easy); }
+  .diff-Medium { color: var(--medium); }
+  .diff-Hard { color: var(--hard); }
 
   /* Status dropdown popover */
   .status-popover {
@@ -252,8 +249,14 @@
   .status-option.selected { color: var(--ink); background: var(--surface-3); }
   .status-option .opt-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
-  /* Empty state */
   .empty { padding: 80px 20px; text-align: center; color: var(--muted); }
+
+  @media (max-width: 760px) {
+    .prog-bar { width: 64px; }
+    .table-card { margin-left: 24px; }
+    .td-prac, th.h-prac { display: none; }
+    .band-diffs { gap: 14px; }
+  }
 </style>
 </head>
 <body>
@@ -267,6 +270,27 @@
   <div style="display:flex;align-items:center;gap:8px">
     <a href="/" class="nav-link">Dashboard</a>
     <a href="/sheet.html" class="nav-link active">Sheet</a>
+  </div>
+</div>
+
+<!-- Progress band -->
+<div class="progress-band">
+  <div class="ring-wrap">
+    <svg width="62" height="62" viewBox="0 0 62 62">
+      <circle class="ring-track" cx="31" cy="31" r="27" fill="none" stroke-width="5"/>
+      <circle class="ring-fill" id="ringFill" cx="31" cy="31" r="27" fill="none" stroke-width="5"
+              stroke-dasharray="169.6" stroke-dashoffset="169.6"/>
+    </svg>
+    <div class="ring-inner" id="ringPct">–</div>
+  </div>
+  <div class="band-main">
+    <div class="band-label">Overall Progress</div>
+    <div class="band-count"><b id="bandDone">–</b> <span>/ <span id="bandTotal">–</span></span></div>
+  </div>
+  <div class="band-diffs">
+    <div class="band-diff"><span class="dot" style="background:var(--easy)"></span> Easy&nbsp; <b id="easyDone">–</b><span>/<span id="easyTotal">–</span></span></div>
+    <div class="band-diff"><span class="dot" style="background:var(--medium)"></span> Medium&nbsp; <b id="medDone">–</b><span>/<span id="medTotal">–</span></span></div>
+    <div class="band-diff"><span class="dot" style="background:var(--hard)"></span> Hard&nbsp; <b id="hardDone">–</b><span>/<span id="hardTotal">–</span></span></div>
   </div>
 </div>
 
@@ -287,16 +311,12 @@
     <option value="Medium">Medium</option>
     <option value="Hard">Hard</option>
   </select>
-  <div class="filter-stats">
-    <span class="filter-stat">Showing <strong id="countShown">–</strong></span>
-    <span class="filter-stat">Done <strong id="countDone">–</strong></span>
-  </div>
+  <button class="expand-btn" id="toggleAll">Expand all</button>
 </div>
 
 <!-- Sheet content -->
-<div class="sheet-wrap" id="sheetWrap">
-  <div class="empty" id="emptyState">Loading…</div>
-</div>
+<div class="sheet-wrap" id="sheetWrap"></div>
+<div class="empty hidden" id="emptyState">No problems match the current filters.</div>
 
 <!-- Status popover (shared, repositioned on click) -->
 <div class="status-popover" id="statusPopover"></div>
@@ -310,19 +330,27 @@ const STATUS_LABEL = {
   completed: 'Completed',
 };
 const STATUS_DOT_COLOR = {
-  pending: '#5a5955',
-  attempted: '#f59e0b',
+  pending: '#6b6a64',
+  attempted: '#eab308',
   revision_needed: '#f97316',
   solved_with_help: '#22c55e',
   completed: '#22c55e',
 };
 const VALID_STATUSES = ['pending', 'attempted', 'revision_needed', 'solved_with_help', 'completed'];
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// Revision after completing still counts as done — progress is never lost.
+const isDone = (p) => p.status === 'completed' || p.status === 'solved_with_help' ||
+  (p.status === 'revision_needed' && p.everCompleted);
 
 let allProblems = [];
-// collapsed state: stepName → bool, subsKey (step+'|||'+sub) → bool
-const stepCollapsed = new Set();
-const subCollapsed  = new Set();
+
+// Collapse state, persisted. Default: everything collapsed (like TUF).
+const openSteps = new Set(JSON.parse(localStorage.getItem('sheetOpenSteps') || '[]'));
+const openSubs  = new Set(JSON.parse(localStorage.getItem('sheetOpenSubs')  || '[]'));
+function persistOpenState() {
+  localStorage.setItem('sheetOpenSteps', JSON.stringify([...openSteps]));
+  localStorage.setItem('sheetOpenSubs',  JSON.stringify([...openSubs]));
+}
 
 // ── Load ─────────────────────────────────────────────────────────
 async function loadSheet() {
@@ -332,7 +360,30 @@ async function loadSheet() {
   render();
 }
 
-// ── Build grouped structure ───────────────────────────────────────
+// ── Header band ──────────────────────────────────────────────────
+function renderBand() {
+  const total = allProblems.length;
+  const done = allProblems.filter(isDone).length;
+  const pct = total ? Math.round((done / total) * 100) : 0;
+
+  document.getElementById('bandDone').textContent = done;
+  document.getElementById('bandTotal').textContent = total;
+  document.getElementById('ringPct').textContent = pct + '%';
+  const C = 2 * Math.PI * 27;
+  const ring = document.getElementById('ringFill');
+  ring.setAttribute('stroke-dasharray', C.toFixed(1));
+  ring.setAttribute('stroke-dashoffset', (C * (1 - pct / 100)).toFixed(1));
+
+  for (const [diff, doneId, totalId] of [
+    ['Easy', 'easyDone', 'easyTotal'], ['Medium', 'medDone', 'medTotal'], ['Hard', 'hardDone', 'hardTotal'],
+  ]) {
+    const ofDiff = allProblems.filter((p) => p.difficulty === diff);
+    document.getElementById(doneId).textContent = ofDiff.filter(isDone).length;
+    document.getElementById(totalId).textContent = ofDiff.length;
+  }
+}
+
+// ── Grouping ─────────────────────────────────────────────────────
 function buildGroups(problems) {
   const steps = [];
   const stepMap = {};
@@ -344,7 +395,6 @@ function buildGroups(problems) {
     const sg = stepMap[p.step];
     sg.total++;
     if (isDone(p)) sg.done++;
-
     const subKey = p.step + '|||' + p.subsection;
     if (!sg.subMap[subKey]) {
       sg.subMap[subKey] = { sub: p.subsection, key: subKey, items: [], total: 0, done: 0 };
@@ -358,16 +408,21 @@ function buildGroups(problems) {
   return steps;
 }
 
-function isDone(p) { return p.status === 'completed' || p.status === 'solved_with_help'; }
-
-// ── Render ───────────────────────────────────────────────────────
+// ── Filters ──────────────────────────────────────────────────────
+function filtersActive() {
+  return Boolean(
+    document.getElementById('searchInput').value.trim() ||
+    document.getElementById('filterStatus').value ||
+    document.getElementById('filterDiff').value
+  );
+}
 function getFiltered() {
   const search = document.getElementById('searchInput').value.toLowerCase().trim();
   const status = document.getElementById('filterStatus').value;
-  const diff   = document.getElementById('filterDiff').value;
+  const diff = document.getElementById('filterDiff').value;
   return allProblems.filter((p) => {
     if (status && p.status !== status) return false;
-    if (diff   && p.difficulty !== diff) return false;
+    if (diff && p.difficulty !== diff) return false;
     if (search && !p.title.toLowerCase().includes(search) &&
                   !p.step.toLowerCase().includes(search) &&
                   !p.subsection.toLowerCase().includes(search)) return false;
@@ -375,129 +430,111 @@ function getFiltered() {
   });
 }
 
+// ── Render ───────────────────────────────────────────────────────
+const chevSvg = `<svg viewBox="0 0 8 12" width="8" height="12" fill="none">
+  <path d="M1.5 1.5l5 4.5-5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+function progHtml(done, total, sub) {
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  return `<div class="prog-wrap">
+    <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
+    <span class="prog-count">${done} <span>/ ${total}</span></span>
+  </div>`;
+}
+
 function render() {
+  renderBand();
   const filtered = getFiltered();
   const wrap = document.getElementById('sheetWrap');
   const empty = document.getElementById('emptyState');
+  const showAll = filtersActive(); // searching → expand everything so results are visible
 
-  // Update counters
-  document.getElementById('countShown').textContent = filtered.length.toLocaleString() + ' / ' + allProblems.length.toLocaleString();
-  document.getElementById('countDone').textContent = filtered.filter(isDone).length.toLocaleString();
+  empty.classList.toggle('hidden', filtered.length > 0);
+  if (!filtered.length) { wrap.innerHTML = ''; return; }
 
-  if (!filtered.length) { wrap.innerHTML = ''; empty.style.display = ''; return; }
-  empty.style.display = 'none';
-
-  const groups = buildGroups(filtered);
   let html = '';
-
-  for (const sg of groups) {
-    const stepOpen = !stepCollapsed.has(sg.step);
-    const pct = sg.total ? Math.round((sg.done / sg.total) * 100) : 0;
-
-    html += `<div class="step-group" data-step="${esc(sg.step)}">
-      <div class="step-header${stepOpen ? ' open' : ''}" data-step="${esc(sg.step)}">
-        <span class="step-chevron">
-          <svg width="8" height="12" viewBox="0 0 8 12" fill="none">
-            <path d="M1 1l6 5-6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </span>
-        <span class="step-name">${esc(sg.step)}</span>
-        <div class="step-prog-wrap">
-          <div class="step-prog-bar"><div class="step-prog-fill" style="width:${pct}%"></div></div>
-          <span class="step-count">${sg.done} / ${sg.total}</span>
-        </div>
-      </div>`;
+  for (const sg of buildGroups(filtered)) {
+    const stepOpen = showAll || openSteps.has(sg.step);
+    html += `<div class="step-header${stepOpen ? ' open' : ''}" data-step="${esc(sg.step)}">
+      <span class="chev">${chevSvg}</span>
+      <span class="step-name">${esc(sg.step)}</span>
+      ${progHtml(sg.done, sg.total)}
+    </div>`;
 
     for (const sub of sg.subs) {
-      const subKey = sub.key;
-      const subOpen = !subCollapsed.has(subKey);
-      const subPct = sub.total ? Math.round((sub.done / sub.total) * 100) : 0;
-
-      html += `<div class="subsection${stepOpen ? '' : ' hidden'}" data-subkey="${esc(subKey)}">
-        <div class="sub-header${subOpen ? ' open' : ''}" data-subkey="${esc(subKey)}">
-          <span class="sub-chevron">
-            <svg width="6" height="10" viewBox="0 0 6 10" fill="none">
-              <path d="M1 1l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </span>
+      const subOpen = showAll || openSubs.has(sub.key);
+      html += `<div class="${stepOpen ? '' : 'hidden'}">
+        <div class="sub-header${subOpen ? ' open' : ''}" data-subkey="${esc(sub.key)}">
+          <span class="chev">${chevSvg}</span>
           <span class="sub-name">${esc(sub.sub)}</span>
-          <div class="step-prog-wrap">
-            <div class="sub-prog-bar"><div class="sub-prog-fill" style="width:${subPct}%"></div></div>
-            <span class="sub-count">${sub.done} / ${sub.total}</span>
-          </div>
+          ${progHtml(sub.done, sub.total)}
         </div>
-        <div class="sub-table-wrap${subOpen ? '' : ' hidden'}">
+        <div class="table-card${subOpen ? '' : ' hidden'}">
           <table>
             <thead>
-              <tr class="table-header-row">
-                <th style="width:48px;text-align:center">Status</th>
+              <tr>
+                <th class="c" style="width:64px">Status</th>
                 <th>Problem</th>
-                <th style="width:70px">Solve</th>
-                <th style="width:110px">Resources</th>
-                <th style="width:88px">Difficulty</th>
+                <th style="width:80px">Solve</th>
+                <th style="width:110px">Resource</th>
+                <th class="h-prac" style="width:90px">Practice</th>
+                <th class="c" style="width:80px">Revision</th>
+                <th style="width:96px">Difficulty</th>
               </tr>
             </thead>
-            <tbody>
-              ${sub.items.map((p) => problemRow(p)).join('')}
-            </tbody>
+            <tbody>${sub.items.map(problemRow).join('')}</tbody>
           </table>
         </div>
       </div>`;
     }
-
-    html += `</div>`;
   }
-
   wrap.innerHTML = html;
 }
 
 function problemRow(p) {
   const done = isDone(p);
-  const solve = p.practiceUrl
-    ? `<a class="solve-link" href="${esc(p.practiceUrl)}" target="_blank">Solve</a>`
-    : `<span class="solve-dash">—</span>`;
+  const btnClass =
+    done ? 'done' + (p.status === 'solved_with_help' ? ' help' : '') :
+    p.status === 'attempted' ? 'attempted' :
+    p.status === 'revision_needed' ? 'revision' : '';
+  const countBadge = (p.completionCount || 0) > 1
+    ? `<span class="count-badge" title="Completed ${p.completionCount} times">×${p.completionCount}</span>` : '';
+
+  const solve = p.url
+    ? `<a class="solve-link" href="${esc(p.url)}" target="_blank">Solve</a>`
+    : `<span class="none-dash">---</span>`;
 
   const res = [
-    p.youtubeUrl ? `<a class="res-icon yt" href="${esc(p.youtubeUrl)}" target="_blank" title="YouTube">▶</a>` : '',
-    p.url        ? `<a class="res-icon tuf" href="${esc(p.url)}"        target="_blank" title="Article">A</a>`  : '',
-  ].filter(Boolean).join('') || `<span class="res-none">—</span>`;
+    p.url ? `<a class="icon-link doc-icon" href="${esc(p.url)}" target="_blank" title="Article">
+        <svg width="15" height="17" viewBox="0 0 15 17" fill="none">
+          <path d="M2 1h7l4 4v11H2V1z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+          <path d="M9 1v4h4" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+          <path d="M4.5 8.5h6M4.5 11h6M4.5 13.5h4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+        </svg></a>` : '',
+    p.youtubeUrl ? `<a class="icon-link" href="${esc(p.youtubeUrl)}" target="_blank" title="YouTube"><span class="yt-badge"></span></a>` : '',
+  ].filter(Boolean).join('') || `<span class="none-dash">---</span>`;
+
+  const practice = p.practiceUrl
+    ? `<a class="solve-link" href="${esc(p.practiceUrl)}" target="_blank">Link</a>`
+    : `<span class="none-dash">---</span>`;
 
   return `<tr data-id="${esc(p.id)}">
-    <td class="td-status">
-      <button class="status-btn" data-id="${esc(p.id)}" data-status="${esc(p.status)}" title="${STATUS_LABEL[p.status]}">
-        ${statusIcon(p.status)}
+    <td class="td-status c">
+      <button class="status-btn ${btnClass}" data-id="${esc(p.id)}" data-status="${esc(p.status)}" title="${STATUS_LABEL[p.status]}">
+        <span class="check"></span><span class="dash"></span>
       </button>
     </td>
-    <td class="td-title">
-      <span class="problem-name${done ? ' done' : ''}">${esc(p.title)}</span>
-    </td>
+    <td><span class="problem-name">${esc(p.title)}</span>${countBadge}</td>
     <td class="td-solve">${solve}</td>
     <td class="td-res"><div class="res-links">${res}</div></td>
+    <td class="td-prac">${practice}</td>
+    <td class="td-rev c">
+      <button class="rev-btn${p.status === 'revision_needed' ? ' on' : ''}" data-id="${esc(p.id)}" data-status="${esc(p.status)}" title="Toggle revision">
+        <svg viewBox="0 0 24 24"><path class="star-shape" d="M12 2.5l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5L12 17.4l-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95L12 2.5z"/></svg>
+      </button>
+    </td>
     <td class="td-diff"><span class="diff diff-${esc(p.difficulty)}">${esc(p.difficulty)}</span></td>
   </tr>`;
-}
-
-function statusIcon(status) {
-  if (status === 'completed' || status === 'solved_with_help') {
-    const opacity = status === 'solved_with_help' ? 'opacity:.75' : '';
-    return `<span class="status-icon ${esc(status)}" style="${opacity}">
-      <span class="checkmark"></span>
-    </span>`;
-  }
-  if (status === 'revision_needed') {
-    return `<span class="status-icon revision_needed">
-      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M5 1l1.12 2.27 2.5.36-1.81 1.76.43 2.49L5 6.77 2.76 7.88l.43-2.49L1.38 3.63l2.5-.36L5 1z" fill="#f97316"/>
-      </svg>
-    </span>`;
-  }
-  if (status === 'attempted') {
-    return `<span class="status-icon attempted">
-      <span class="att-dash"></span>
-    </span>`;
-  }
-  // pending
-  return `<span class="status-icon pending"></span>`;
 }
 
 // ── Events ───────────────────────────────────────────────────────
@@ -505,11 +542,22 @@ let activePopoverBtn = null;
 const popover = document.getElementById('statusPopover');
 
 document.getElementById('sheetWrap').addEventListener('click', (e) => {
+  const statusBtn = e.target.closest('.status-btn');
+  if (statusBtn) { openPopover(statusBtn); return; }
+
+  const revBtn = e.target.closest('.rev-btn');
+  if (revBtn) {
+    // Star ON = revision_needed. Turning it off returns the problem to completed.
+    const next = revBtn.dataset.status === 'revision_needed' ? 'completed' : 'revision_needed';
+    updateStatus(revBtn.dataset.id, next);
+    return;
+  }
+
   const stepHeader = e.target.closest('.step-header');
   if (stepHeader) {
     const step = stepHeader.dataset.step;
-    if (stepCollapsed.has(step)) stepCollapsed.delete(step);
-    else stepCollapsed.add(step);
+    openSteps.has(step) ? openSteps.delete(step) : openSteps.add(step);
+    persistOpenState();
     render();
     return;
   }
@@ -517,18 +565,22 @@ document.getElementById('sheetWrap').addEventListener('click', (e) => {
   const subHeader = e.target.closest('.sub-header');
   if (subHeader) {
     const key = subHeader.dataset.subkey;
-    if (subCollapsed.has(key)) subCollapsed.delete(key);
-    else subCollapsed.add(key);
+    openSubs.has(key) ? openSubs.delete(key) : openSubs.add(key);
+    persistOpenState();
     render();
-    return;
   }
+});
 
-  const statusBtn = e.target.closest('.status-btn');
-  if (statusBtn) {
-    e.stopPropagation();
-    openPopover(statusBtn);
-    return;
+// Expand / collapse all
+document.getElementById('toggleAll').addEventListener('click', (e) => {
+  const anyOpen = openSteps.size > 0;
+  openSteps.clear(); openSubs.clear();
+  if (!anyOpen) {
+    for (const p of allProblems) { openSteps.add(p.step); openSubs.add(p.step + '|||' + p.subsection); }
   }
+  e.target.textContent = anyOpen ? 'Expand all' : 'Collapse all';
+  persistOpenState();
+  render();
 });
 
 function openPopover(btn) {
@@ -543,26 +595,26 @@ function openPopover(btn) {
     </div>`).join('');
 
   popover.querySelectorAll('.status-option').forEach((opt) => {
-    opt.addEventListener('click', async () => {
-      const newStatus = opt.dataset.status;
+    opt.addEventListener('click', () => {
       const id = btn.dataset.id;
+      const status = opt.dataset.status;
       closePopover();
-      await updateStatus(id, newStatus);
+      updateStatus(id, status);
     });
   });
 
-  // Position popover
   const rect = btn.getBoundingClientRect();
-  popover.style.top  = (rect.bottom + 4) + 'px';
-  popover.style.left = (rect.left - 60)  + 'px';
   popover.classList.add('visible');
+  const ph = popover.offsetHeight;
+  const top = rect.bottom + 4 + ph > window.innerHeight ? rect.top - ph - 4 : rect.bottom + 4;
+  popover.style.top = top + 'px';
+  popover.style.left = Math.max(8, rect.left - 60) + 'px';
 }
 
 function closePopover() {
   popover.classList.remove('visible');
   activePopoverBtn = null;
 }
-
 document.addEventListener('click', (e) => {
   if (!popover.contains(e.target) && !e.target.closest('.status-btn')) closePopover();
 });
@@ -570,11 +622,12 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePopov
 
 async function updateStatus(id, status) {
   try {
-    await fetch(`/api/problems/${id}/status`, {
+    const r = await fetch(`/api/problems/${id}/status`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
     });
+    if (!r.ok) throw new Error(await r.text());
     const p = allProblems.find((x) => x.id === id);
     if (p) p.status = status;
     render();
@@ -583,16 +636,8 @@ async function updateStatus(id, status) {
   }
 }
 
-// ── Filters ──────────────────────────────────────────────────────
 ['searchInput', 'filterStatus', 'filterDiff'].forEach((id) => {
-  document.getElementById(id).addEventListener('input', () => {
-    // Reset collapsed state when filtering so results are visible
-    const query = document.getElementById('searchInput').value.trim() ||
-                  document.getElementById('filterStatus').value ||
-                  document.getElementById('filterDiff').value;
-    if (query) { stepCollapsed.clear(); subCollapsed.clear(); }
-    render();
-  });
+  document.getElementById(id).addEventListener('input', render);
 });
 
 loadSheet();

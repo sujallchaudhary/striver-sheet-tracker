@@ -307,6 +307,15 @@
             <span class="inline-result" id="notionResult"></span>
           </div>
         </div>
+        <div class="setting-row">
+          <label>Backup <span class="hint">(progress, history &amp; settings — API keys are never exported)</span></label>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <a class="mini-btn" href="/api/export" download style="text-decoration:none;display:inline-flex;align-items:center">Export progress</a>
+            <button type="button" class="mini-btn" id="importBtn">Import progress…</button>
+            <input type="file" id="importFile" accept=".json,application/json" style="display:none">
+            <span class="inline-result" id="importResult"></span>
+          </div>
+        </div>
         <button id="saveSettings">Save &amp; regenerate today</button>
         <span class="inline-result" id="settingsResult" style="margin-left:10px"></span>
       </div>
@@ -512,6 +521,28 @@ async function notionSync(scope, btn) {
 }
 document.getElementById('notionSyncToday').onclick = (e) => notionSync('today', e.target);
 document.getElementById('notionSyncAll').onclick = (e) => notionSync('all', e.target);
+
+// --- Import progress ---
+document.getElementById('importBtn').onclick = () => document.getElementById('importFile').click();
+document.getElementById('importFile').addEventListener('change', async (e) => {
+  const out = document.getElementById('importResult');
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  if (!confirm('Importing will overwrite your current progress, history and preferences with the file\'s contents. Continue?')) return;
+  out.textContent = '⏳ Importing…';
+  try {
+    const data = JSON.parse(await file.text());
+    const r = await api('/api/import', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    out.textContent = `✓ Restored ${r.restored} problems`;
+    render(r.dashboard);
+  } catch (err) {
+    out.textContent = '✗ ' + err.message;
+  }
+});
 
 // ── Chat panel ──────────────────────────────────────────────────
 const chatMessages = document.getElementById('chatMessages');
