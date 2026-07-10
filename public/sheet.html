@@ -6,178 +6,254 @@
 <title>A2Z Sheet — DSA Tracker</title>
 <style>
   :root {
-    --page: #0f0f0e; --surface: #181817; --surface-2: #222221;
-    --ink: #e8e7e2; --ink-2: #a09f99; --muted: #5e5d57;
-    --grid: #2e2e2c; --border: rgba(255,255,255,0.07);
-    --accent: #3987e5; --accent-deep: #86b6ef; --accent-soft: #0e2f5c;
-    --good: #22c55e; --good-text: #22c55e;
-    --warn: #f59e0b; --serious: #f97316; --critical: #ef4444;
+    --bg: #0c0c0b;
+    --surface: #141413;
+    --surface-2: #1c1c1b;
+    --surface-3: #242422;
+    --ink: #e8e7e2;
+    --ink-2: #a09f99;
+    --muted: #5a5955;
+    --border: rgba(255,255,255,0.06);
+    --border-2: rgba(255,255,255,0.04);
+    --accent: #f97316;
+    --accent-dim: rgba(249,115,22,0.15);
+    --good: #22c55e;
+    --warn: #f59e0b;
+    --critical: #ef4444;
     --header-h: 48px;
-  }
-  @media (prefers-color-scheme: light) {
-    :root {
-      --page: #f5f5f3; --surface: #ffffff; --surface-2: #f0efeb;
-      --ink: #0b0b0a; --ink-2: #52514e; --muted: #898781;
-      --grid: #e1e0d9; --border: rgba(11,11,11,0.08);
-      --accent: #2563eb; --accent-deep: #1c4fad; --accent-soft: #dbeafe;
-      --good: #16a34a; --good-text: #15803d;
-    }
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    background: var(--page); color: var(--ink);
-    font: 14px/1.5 "SF Pro Text", system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--ink);
+    font: 13.5px/1.5 "SF Pro Text", system-ui, -apple-system, "Segoe UI", sans-serif;
     display: flex; flex-direction: column; height: 100vh; overflow: hidden;
   }
 
   /* ── Topbar ── */
   .topbar {
-    height: var(--header-h); min-height: var(--header-h);
+    height: var(--header-h); flex-shrink: 0;
     display: flex; align-items: center; justify-content: space-between;
     padding: 0 20px; border-bottom: 1px solid var(--border);
-    background: var(--surface); z-index: 20; flex-shrink: 0; gap: 16px;
+    background: var(--surface);
   }
   .topbar-left { display: flex; align-items: center; gap: 10px; }
   .topbar-logo { font-size: 15px; font-weight: 700; letter-spacing: -.02em; }
   .topbar-logo span { color: var(--accent); }
   .topbar-sub { font-size: 12px; color: var(--muted); }
-  .topbar-nav-link {
-    font: 600 12px system-ui, sans-serif; color: var(--muted); text-decoration: none;
-    padding: 5px 11px; border-radius: 7px; border: 1px solid var(--grid);
-    transition: all .15s;
+  .nav-link {
+    font: 600 12px system-ui, sans-serif; color: var(--muted);
+    text-decoration: none; padding: 5px 11px; border-radius: 7px;
+    border: 1px solid rgba(255,255,255,0.08); transition: all .15s;
   }
-  .topbar-nav-link:hover { color: var(--ink); border-color: var(--muted); }
-  .topbar-nav-link.active { color: var(--accent-deep); border-color: var(--accent); background: var(--accent-soft); }
+  .nav-link:hover { color: var(--ink); border-color: var(--muted); }
+  .nav-link.active { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
 
   /* ── Filter bar ── */
   .filter-bar {
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-    padding: 10px 20px; border-bottom: 1px solid var(--border);
+    padding: 8px 20px; border-bottom: 1px solid var(--border);
     background: var(--surface); flex-shrink: 0;
   }
   .filter-bar input[type="search"] {
-    flex: 1; min-width: 200px; padding: 6px 12px; border-radius: 8px;
-    border: 1px solid var(--grid); background: var(--surface-2);
+    flex: 1; min-width: 180px; max-width: 320px;
+    padding: 6px 12px; border-radius: 7px;
+    border: 1px solid rgba(255,255,255,0.08); background: var(--surface-2);
     color: var(--ink); font: 13px system-ui, sans-serif;
   }
   .filter-bar input[type="search"]:focus { outline: none; border-color: var(--accent); }
+  .filter-bar input[type="search"]::placeholder { color: var(--muted); }
   .filter-bar select {
-    padding: 6px 10px; border-radius: 8px; border: 1px solid var(--grid);
-    background: var(--surface-2); color: var(--ink); font: 13px system-ui, sans-serif;
-    cursor: pointer;
+    padding: 6px 10px; border-radius: 7px;
+    border: 1px solid rgba(255,255,255,0.08); background: var(--surface-2);
+    color: var(--ink); font: 13px system-ui, sans-serif; cursor: pointer;
   }
   .filter-bar select:focus { outline: none; border-color: var(--accent); }
-  .filter-count { font-size: 12px; color: var(--muted); margin-left: auto; white-space: nowrap; }
+  .filter-count { font-size: 12px; color: var(--muted); margin-left: auto; }
+  .filter-stats { display: flex; gap: 16px; font-size: 12px; margin-left: auto; }
+  .filter-stat { color: var(--muted); }
+  .filter-stat strong { color: var(--ink-2); font-weight: 600; }
 
-  /* ── Progress bar strip ── */
-  .progress-strip {
+  /* ── Scroll container ── */
+  .sheet-wrap { flex: 1; overflow-y: auto; overflow-x: hidden; }
+  .sheet-wrap::-webkit-scrollbar { width: 5px; }
+  .sheet-wrap::-webkit-scrollbar-track { background: transparent; }
+  .sheet-wrap::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 99px; }
+
+  /* ── Step group ── */
+  .step-group { border-bottom: 1px solid var(--border); }
+
+  .step-header {
     display: flex; align-items: center; gap: 12px;
-    padding: 8px 20px; border-bottom: 1px solid var(--border);
-    background: var(--page); flex-shrink: 0; overflow-x: auto;
-  }
-  .progress-strip::-webkit-scrollbar { display: none; }
-  .prog-item { display: flex; flex-direction: column; gap: 3px; min-width: 120px; }
-  .prog-label { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .prog-bar { height: 4px; border-radius: 99px; background: var(--grid); overflow: hidden; }
-  .prog-bar-fill { height: 100%; border-radius: 99px; background: var(--accent); }
-  .prog-nums { font-size: 10px; color: var(--muted); }
-
-  /* ── Table ── */
-  .table-wrap {
-    flex: 1; overflow-y: auto; overflow-x: auto;
-  }
-  .table-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
-  .table-wrap::-webkit-scrollbar-track { background: transparent; }
-  .table-wrap::-webkit-scrollbar-thumb { background: var(--grid); border-radius: 99px; }
-
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  thead { position: sticky; top: 0; z-index: 10; }
-  thead tr { background: var(--surface); }
-  th {
-    padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600;
-    letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
-    border-bottom: 1px solid var(--border); white-space: nowrap;
-    user-select: none; cursor: pointer;
-  }
-  th:hover { color: var(--ink); }
-  th.sorted { color: var(--accent); }
-  th .sort-icon { opacity: .5; margin-left: 4px; font-size: 10px; }
-  th.sorted .sort-icon { opacity: 1; }
-
-  tbody tr {
-    border-bottom: 1px solid var(--border);
+    padding: 13px 20px; cursor: pointer;
+    user-select: none; position: sticky; top: 0; z-index: 5;
+    background: var(--surface); border-bottom: 1px solid var(--border);
     transition: background .1s;
   }
+  .step-header:hover { background: var(--surface-2); }
+  .step-chevron {
+    width: 16px; height: 16px; flex-shrink: 0;
+    color: var(--muted); transition: transform .2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .step-header.open .step-chevron { transform: rotate(90deg); }
+  .step-name { font-size: 14px; font-weight: 700; color: var(--ink); flex: 1; }
+  .step-prog-wrap { display: flex; align-items: center; gap: 10px; }
+  .step-prog-bar { width: 120px; height: 4px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
+  .step-prog-fill { height: 100%; border-radius: 99px; background: var(--accent); transition: width .4s ease; }
+  .step-count { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* ── Subsection ── */
+  .subsection { }
+  .subsection.hidden { display: none; }
+
+  .sub-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 20px 9px 40px; cursor: pointer;
+    user-select: none; background: var(--surface-2);
+    border-bottom: 1px solid var(--border-2);
+    transition: background .1s;
+  }
+  .sub-header:hover { background: var(--surface-3); }
+  .sub-chevron {
+    width: 12px; height: 12px; flex-shrink: 0;
+    color: var(--muted); transition: transform .2s;
+    display: flex; align-items: center; justify-content: center; font-size: 9px;
+  }
+  .sub-header.open .sub-chevron { transform: rotate(90deg); }
+  .sub-name { font-size: 12.5px; font-weight: 600; color: var(--ink-2); flex: 1; }
+  .sub-prog-bar { width: 80px; height: 3px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
+  .sub-prog-fill { height: 100%; border-radius: 99px; background: var(--accent); transition: width .4s ease; }
+  .sub-count { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* ── Table inside subsection ── */
+  .sub-table-wrap { background: var(--bg); }
+  .sub-table-wrap.hidden { display: none; }
+
+  table { width: 100%; border-collapse: collapse; }
+  .table-header-row {
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+  }
+  .table-header-row th {
+    padding: 7px 14px; text-align: left;
+    font-size: 11px; font-weight: 600; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--muted);
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border-2);
+    transition: background .08s;
+  }
   tbody tr:hover { background: var(--surface-2); }
-  tbody tr.group-header { background: var(--surface); cursor: pointer; }
-  tbody tr.group-header:hover { background: var(--surface-2); }
-  tbody tr.group-hidden { display: none; }
+  tbody tr:last-child { border-bottom: none; }
 
-  td { padding: 9px 14px; color: var(--ink-2); vertical-align: middle; }
-  td.num { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
-  td.title-cell { color: var(--ink); font-weight: 500; max-width: 320px; }
-  td.step-cell { max-width: 200px; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  td { padding: 10px 14px; vertical-align: middle; }
 
-  /* Group header row */
-  .group-header td {
-    padding: 8px 14px; font-size: 11.5px; font-weight: 700;
-    color: var(--ink-2); letter-spacing: .01em;
+  /* Status checkbox cell */
+  .td-status { width: 48px; text-align: center; padding: 10px 8px; }
+  .status-btn {
+    width: 22px; height: 22px; border-radius: 5px; border: none;
+    cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    transition: all .15s; position: relative; background: transparent; padding: 0;
   }
-  .group-header td:first-child { display: flex; align-items: center; gap: 8px; }
-  .group-chevron { font-size: 10px; color: var(--muted); transition: transform .2s; }
-  .group-header.open .group-chevron { transform: rotate(90deg); }
-  .group-prog { height: 5px; width: 80px; border-radius: 99px; background: var(--grid); overflow: hidden; display: inline-block; vertical-align: middle; }
-  .group-prog-fill { height: 100%; border-radius: 99px; background: var(--accent); }
-  .group-count { font-size: 11px; color: var(--muted); font-weight: 400; }
+  .status-btn:focus { outline: none; }
 
-  /* Difficulty badge */
-  .diff { font-size: 11px; padding: 2px 7px; border-radius: 99px; font-weight: 600; white-space: nowrap; }
-  .diff-Easy { color: var(--good); background: rgba(34,197,94,.1); }
-  .diff-Medium { color: var(--warn); background: rgba(245,158,11,.1); }
-  .diff-Hard { color: var(--critical); background: rgba(239,68,68,.1); }
-
-  /* Status chip */
-  .status-chip {
-    display: inline-flex; align-items: center; gap: 5px;
-    font-size: 11px; font-weight: 600; white-space: nowrap;
+  /* Status icons */
+  .status-icon { width: 20px; height: 20px; border-radius: 4px; }
+  .status-icon.pending {
+    border: 2px solid var(--muted); background: transparent;
   }
-  .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-  .s-completed .dot, .s-solved_with_help .dot { background: var(--good); }
-  .s-attempted .dot { background: var(--serious); }
-  .s-revision_needed .dot { background: var(--warn); }
-  .s-pending .dot { background: var(--grid); }
-  .s-completed { color: var(--good-text); }
-  .s-solved_with_help { color: var(--good-text); }
-  .s-attempted { color: var(--ink-2); }
-  .s-revision_needed { color: var(--ink-2); }
-  .s-pending { color: var(--muted); }
-
-  /* Status select dropdown */
-  .status-select {
-    appearance: none; -webkit-appearance: none;
-    background: transparent; border: 1px solid var(--grid); border-radius: 6px;
-    color: var(--ink-2); font: 11.5px system-ui, sans-serif;
-    padding: 3px 8px; cursor: pointer; transition: border-color .15s;
+  .status-icon.pending:hover { border-color: var(--accent); }
+  .status-icon.attempted {
+    border: 2px solid var(--warn); background: transparent;
+    position: relative;
   }
-  .status-select:focus { outline: none; border-color: var(--accent); }
-  .status-select:hover { border-color: var(--muted); }
-
-  /* Links */
-  .links { display: flex; gap: 6px; }
-  .lnk {
-    font-size: 11px; color: var(--accent); text-decoration: none;
-    padding: 2px 7px; border-radius: 5px; border: 1px solid var(--accent-soft);
-    opacity: .8; transition: opacity .15s;
+  .status-icon.completed, .status-icon.solved_with_help {
+    background: var(--accent); border: 2px solid var(--accent);
   }
-  .lnk:hover { opacity: 1; }
+  .status-icon.revision_needed {
+    background: transparent; border: 2px solid var(--accent);
+  }
+  .checkmark {
+    width: 10px; height: 8px;
+    border-left: 2px solid #fff; border-bottom: 2px solid #fff;
+    transform: rotate(-45deg) translate(1px, -1px);
+    display: none;
+  }
+  .status-icon.completed .checkmark,
+  .status-icon.solved_with_help .checkmark { display: block; }
+
+  /* help dot for solved_with_help */
+  .status-icon.solved_with_help {
+    background: var(--accent); opacity: .7;
+  }
+
+  /* revision star */
+  .rev-star { font-size: 11px; color: var(--accent); }
+
+  /* attempt dash */
+  .att-dash { width: 8px; height: 2px; background: var(--warn); border-radius: 99px; }
+
+  /* Problem name */
+  .td-title { min-width: 200px; max-width: 380px; }
+  .problem-name { font-weight: 500; color: var(--ink); font-size: 13.5px; }
+  .problem-name.done { color: var(--ink-2); }
+
+  /* Solve link */
+  .td-solve { width: 70px; }
+  .solve-link {
+    font-size: 12.5px; font-weight: 600; color: var(--accent);
+    text-decoration: none; transition: opacity .15s;
+  }
+  .solve-link:hover { opacity: .7; }
+  .solve-dash { color: var(--muted); font-size: 12px; }
+
+  /* Resource icons */
+  .td-res { width: 100px; }
+  .res-links { display: flex; gap: 6px; align-items: center; }
+  .res-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 20px; border-radius: 4px;
+    font-size: 11px; font-weight: 700; text-decoration: none;
+    transition: opacity .15s; letter-spacing: -.01em;
+  }
+  .res-icon:hover { opacity: .8; }
+  .res-icon.yt { background: #ff0000; color: #fff; font-size: 9px; }
+  .res-icon.tuf { background: var(--accent); color: #fff; font-size: 9px; }
+  .res-icon.lc { background: #ffa116; color: #fff; font-size: 9px; }
+  .res-none { color: var(--muted); font-size: 12px; }
+
+  /* Difficulty */
+  .td-diff { width: 88px; }
+  .diff {
+    display: inline-block; padding: 2px 10px; border-radius: 99px;
+    font-size: 11.5px; font-weight: 600;
+  }
+  .diff-Easy { color: var(--good); border: 1px solid rgba(34,197,94,.25); background: rgba(34,197,94,.08); }
+  .diff-Medium { color: var(--warn); border: 1px solid rgba(245,158,11,.25); background: rgba(245,158,11,.08); }
+  .diff-Hard { color: var(--critical); border: 1px solid rgba(239,68,68,.25); background: rgba(239,68,68,.08); }
+
+  /* Status dropdown popover */
+  .status-popover {
+    position: fixed; z-index: 100;
+    background: var(--surface-2); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,.6);
+    padding: 6px; min-width: 180px;
+    display: none; flex-direction: column; gap: 2px;
+  }
+  .status-popover.visible { display: flex; }
+  .status-option {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px; border-radius: 7px; cursor: pointer;
+    font-size: 13px; color: var(--ink-2); transition: background .1s;
+  }
+  .status-option:hover { background: var(--surface-3); color: var(--ink); }
+  .status-option.selected { color: var(--ink); background: var(--surface-3); }
+  .status-option .opt-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
   /* Empty state */
-  .empty { padding: 60px 20px; text-align: center; color: var(--muted); font-size: 14px; }
-
-  @media (max-width: 760px) {
-    .progress-strip { display: none; }
-    td.step-cell, th.step-col { display: none; }
-  }
+  .empty { padding: 80px 20px; text-align: center; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -188,9 +264,9 @@
     <div class="topbar-logo">DSA <span>Tracker</span></div>
     <div class="topbar-sub">Striver A2Z</div>
   </div>
-  <div style="display:flex;align-items:center;gap:10px">
-    <a href="/" class="topbar-nav-link">Dashboard</a>
-    <a href="/sheet.html" class="topbar-nav-link active">Sheet</a>
+  <div style="display:flex;align-items:center;gap:8px">
+    <a href="/" class="nav-link">Dashboard</a>
+    <a href="/sheet.html" class="nav-link active">Sheet</a>
   </div>
 </div>
 
@@ -211,97 +287,87 @@
     <option value="Medium">Medium</option>
     <option value="Hard">Hard</option>
   </select>
-  <select id="filterStep" style="max-width:240px">
-    <option value="">All topics</option>
-  </select>
-  <span class="filter-count" id="filterCount"></span>
+  <div class="filter-stats">
+    <span class="filter-stat">Showing <strong id="countShown">–</strong></span>
+    <span class="filter-stat">Done <strong id="countDone">–</strong></span>
+  </div>
 </div>
 
-<!-- Progress strip -->
-<div class="progress-strip" id="progressStrip"></div>
-
-<!-- Table -->
-<div class="table-wrap">
-  <table id="sheetTable">
-    <thead>
-      <tr>
-        <th style="width:44px" data-col="order">#<span class="sort-icon">↕</span></th>
-        <th data-col="title">Title<span class="sort-icon">↕</span></th>
-        <th class="step-col" data-col="step">Topic<span class="sort-icon">↕</span></th>
-        <th style="width:90px" data-col="difficulty">Diff<span class="sort-icon">↕</span></th>
-        <th style="width:150px" data-col="status">Status<span class="sort-icon">↕</span></th>
-        <th style="width:160px">Links</th>
-      </tr>
-    </thead>
-    <tbody id="tableBody"></tbody>
-  </table>
-  <div class="empty" id="emptyState" style="display:none">No problems match your filters.</div>
+<!-- Sheet content -->
+<div class="sheet-wrap" id="sheetWrap">
+  <div class="empty" id="emptyState">Loading…</div>
 </div>
+
+<!-- Status popover (shared, repositioned on click) -->
+<div class="status-popover" id="statusPopover"></div>
 
 <script>
 const STATUS_LABEL = {
-  pending: 'Pending', attempted: 'Attempted', completed: 'Completed',
-  solved_with_help: 'Solved w/ help', revision_needed: 'Revision needed',
+  pending: 'Pending',
+  attempted: 'Attempted',
+  revision_needed: 'Revision needed',
+  solved_with_help: 'Solved w/ help',
+  completed: 'Completed',
+};
+const STATUS_DOT_COLOR = {
+  pending: '#5a5955',
+  attempted: '#f59e0b',
+  revision_needed: '#f97316',
+  solved_with_help: '#22c55e',
+  completed: '#22c55e',
 };
 const VALID_STATUSES = ['pending', 'attempted', 'revision_needed', 'solved_with_help', 'completed'];
-const STATUS_ORDER = { completed: 0, solved_with_help: 1, revision_needed: 2, attempted: 3, pending: 4 };
-const DIFF_ORDER = { Easy: 0, Medium: 1, Hard: 2 };
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 let allProblems = [];
-let allSteps = [];
-let sortCol = 'order';
-let sortAsc = true;
+// collapsed state: stepName → bool, subsKey (step+'|||'+sub) → bool
+const stepCollapsed = new Set();
+const subCollapsed  = new Set();
 
-// Track open/closed groups (by step name)
-const collapsedGroups = new Set();
-
+// ── Load ─────────────────────────────────────────────────────────
 async function loadSheet() {
   const r = await fetch('/api/sheet');
   const data = await r.json();
   allProblems = data.problems;
-  allSteps = data.steps;
+  render();
+}
 
-  // Populate step filter
-  const stepSel = document.getElementById('filterStep');
-  for (const s of allSteps) {
-    const opt = document.createElement('option');
-    opt.value = s.step;
-    opt.textContent = s.step;
-    stepSel.appendChild(opt);
+// ── Build grouped structure ───────────────────────────────────────
+function buildGroups(problems) {
+  const steps = [];
+  const stepMap = {};
+  for (const p of problems) {
+    if (!stepMap[p.step]) {
+      stepMap[p.step] = { step: p.step, subs: [], subMap: {}, total: 0, done: 0 };
+      steps.push(stepMap[p.step]);
+    }
+    const sg = stepMap[p.step];
+    sg.total++;
+    if (isDone(p)) sg.done++;
+
+    const subKey = p.step + '|||' + p.subsection;
+    if (!sg.subMap[subKey]) {
+      sg.subMap[subKey] = { sub: p.subsection, key: subKey, items: [], total: 0, done: 0 };
+      sg.subs.push(sg.subMap[subKey]);
+    }
+    const sub = sg.subMap[subKey];
+    sub.items.push(p);
+    sub.total++;
+    if (isDone(p)) sub.done++;
   }
-
-  renderProgress();
-  renderTable();
+  return steps;
 }
 
-function renderProgress() {
-  const strip = document.getElementById('progressStrip');
-  strip.innerHTML = allSteps.map((s) => {
-    const pct = s.total ? Math.round((s.done / s.total) * 100) : 0;
-    return `<div class="prog-item">
-      <div class="prog-label" title="${esc(s.step)}">${esc(s.step)}</div>
-      <div class="prog-bar"><div class="prog-bar-fill" style="width:${pct}%"></div></div>
-      <div class="prog-nums">${s.done}/${s.total}</div>
-    </div>`;
-  }).join('');
-}
+function isDone(p) { return p.status === 'completed' || p.status === 'solved_with_help'; }
 
-function getFilters() {
-  return {
-    search: document.getElementById('searchInput').value.toLowerCase().trim(),
-    status: document.getElementById('filterStatus').value,
-    diff:   document.getElementById('filterDiff').value,
-    step:   document.getElementById('filterStep').value,
-  };
-}
-
-function filteredProblems() {
-  const { search, status, diff, step } = getFilters();
+// ── Render ───────────────────────────────────────────────────────
+function getFiltered() {
+  const search = document.getElementById('searchInput').value.toLowerCase().trim();
+  const status = document.getElementById('filterStatus').value;
+  const diff   = document.getElementById('filterDiff').value;
   return allProblems.filter((p) => {
     if (status && p.status !== status) return false;
     if (diff   && p.difficulty !== diff) return false;
-    if (step   && p.step !== step) return false;
     if (search && !p.title.toLowerCase().includes(search) &&
                   !p.step.toLowerCase().includes(search) &&
                   !p.subsection.toLowerCase().includes(search)) return false;
@@ -309,166 +375,224 @@ function filteredProblems() {
   });
 }
 
-function sortedProblems(probs) {
-  return [...probs].sort((a, b) => {
-    let av = a[sortCol], bv = b[sortCol];
-    if (sortCol === 'status')     { av = STATUS_ORDER[av] ?? 99; bv = STATUS_ORDER[bv] ?? 99; }
-    if (sortCol === 'difficulty') { av = DIFF_ORDER[av]   ?? 99; bv = DIFF_ORDER[bv]   ?? 99; }
-    if (av < bv) return sortAsc ? -1 : 1;
-    if (av > bv) return sortAsc ?  1 : -1;
-    return 0;
-  });
-}
-
-function renderTable() {
-  const filtered = filteredProblems();
-  const sorted   = sortedProblems(filtered);
-
-  // Update filter count
-  document.getElementById('filterCount').textContent =
-    `${sorted.length.toLocaleString()} / ${allProblems.length.toLocaleString()} problems`;
-
-  const tbody = document.getElementById('tableBody');
+function render() {
+  const filtered = getFiltered();
+  const wrap = document.getElementById('sheetWrap');
   const empty = document.getElementById('emptyState');
 
-  if (!sorted.length) {
-    tbody.innerHTML = '';
-    empty.style.display = '';
-    return;
-  }
+  // Update counters
+  document.getElementById('countShown').textContent = filtered.length.toLocaleString() + ' / ' + allProblems.length.toLocaleString();
+  document.getElementById('countDone').textContent = filtered.filter(isDone).length.toLocaleString();
+
+  if (!filtered.length) { wrap.innerHTML = ''; empty.style.display = ''; return; }
   empty.style.display = 'none';
 
-  // Group by step (preserve sort order within step, unless sorting by non-order col)
-  const isSortedByStep = (sortCol === 'order' || sortCol === 'step');
-  let rows = '';
+  const groups = buildGroups(filtered);
+  let html = '';
 
-  if (isSortedByStep) {
-    // Build groups
-    const groups = [];
-    const groupMap = {};
-    for (const p of sorted) {
-      if (!groupMap[p.step]) {
-        groupMap[p.step] = [];
-        groups.push({ step: p.step, items: groupMap[p.step] });
-      }
-      groupMap[p.step].push(p);
+  for (const sg of groups) {
+    const stepOpen = !stepCollapsed.has(sg.step);
+    const pct = sg.total ? Math.round((sg.done / sg.total) * 100) : 0;
+
+    html += `<div class="step-group" data-step="${esc(sg.step)}">
+      <div class="step-header${stepOpen ? ' open' : ''}" data-step="${esc(sg.step)}">
+        <span class="step-chevron">
+          <svg width="8" height="12" viewBox="0 0 8 12" fill="none">
+            <path d="M1 1l6 5-6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span class="step-name">${esc(sg.step)}</span>
+        <div class="step-prog-wrap">
+          <div class="step-prog-bar"><div class="step-prog-fill" style="width:${pct}%"></div></div>
+          <span class="step-count">${sg.done} / ${sg.total}</span>
+        </div>
+      </div>`;
+
+    for (const sub of sg.subs) {
+      const subKey = sub.key;
+      const subOpen = !subCollapsed.has(subKey);
+      const subPct = sub.total ? Math.round((sub.done / sub.total) * 100) : 0;
+
+      html += `<div class="subsection${stepOpen ? '' : ' hidden'}" data-subkey="${esc(subKey)}">
+        <div class="sub-header${subOpen ? ' open' : ''}" data-subkey="${esc(subKey)}">
+          <span class="sub-chevron">
+            <svg width="6" height="10" viewBox="0 0 6 10" fill="none">
+              <path d="M1 1l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="sub-name">${esc(sub.sub)}</span>
+          <div class="step-prog-wrap">
+            <div class="sub-prog-bar"><div class="sub-prog-fill" style="width:${subPct}%"></div></div>
+            <span class="sub-count">${sub.done} / ${sub.total}</span>
+          </div>
+        </div>
+        <div class="sub-table-wrap${subOpen ? '' : ' hidden'}">
+          <table>
+            <thead>
+              <tr class="table-header-row">
+                <th style="width:48px;text-align:center">Status</th>
+                <th>Problem</th>
+                <th style="width:70px">Solve</th>
+                <th style="width:110px">Resources</th>
+                <th style="width:88px">Difficulty</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sub.items.map((p) => problemRow(p)).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
     }
 
-    for (const g of groups) {
-      const stepInfo = allSteps.find((s) => s.step === g.step) || { done: 0, total: g.items.length };
-      const pct = stepInfo.total ? Math.round((stepInfo.done / stepInfo.total) * 100) : 0;
-      const gId = 'g-' + g.step.replace(/\W+/g, '-');
-      const isOpen = !collapsedGroups.has(g.step);
-      rows += `<tr class="group-header${isOpen ? ' open' : ''}" data-group="${esc(g.step)}">
-        <td colspan="6">
-          <span class="group-chevron">▶</span>
-          <strong>${esc(g.step)}</strong>
-          <span class="group-prog"><span class="group-prog-fill" style="width:${pct}%"></span></span>
-          <span class="group-count">${stepInfo.done}/${stepInfo.total} done</span>
-        </td>
-      </tr>`;
-      for (const p of g.items) {
-        rows += problemRow(p, !isOpen);
-      }
-    }
-  } else {
-    // Flat sort — no grouping
-    for (const p of sorted) {
-      rows += problemRow(p, false);
-    }
+    html += `</div>`;
   }
 
-  tbody.innerHTML = rows;
-
-  // Wire up group headers
-  tbody.querySelectorAll('tr.group-header').forEach((row) => {
-    row.addEventListener('click', () => {
-      const step = row.dataset.group;
-      if (collapsedGroups.has(step)) collapsedGroups.delete(step);
-      else collapsedGroups.add(step);
-      renderTable();
-    });
-  });
-
-  // Wire up status selects
-  tbody.querySelectorAll('.status-select').forEach((sel) => {
-    sel.addEventListener('change', async () => {
-      const id = sel.dataset.id;
-      const status = sel.value;
-      sel.disabled = true;
-      try {
-        await fetch(`/api/problems/${id}/status`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status }),
-        });
-        // Update local data
-        const p = allProblems.find((x) => x.id === id);
-        if (p) p.status = status;
-        // Refresh progress strip
-        rebuildStepStats();
-        renderProgress();
-      } catch (e) {
-        console.error(e);
-      }
-      sel.disabled = false;
-    });
-  });
+  wrap.innerHTML = html;
 }
 
-function problemRow(p, hidden) {
-  const statusOpts = VALID_STATUSES.map((s) =>
-    `<option value="${s}"${p.status === s ? ' selected' : ''}>${STATUS_LABEL[s]}</option>`
-  ).join('');
+function problemRow(p) {
+  const done = isDone(p);
+  const solve = p.practiceUrl
+    ? `<a class="solve-link" href="${esc(p.practiceUrl)}" target="_blank">Solve</a>`
+    : `<span class="solve-dash">—</span>`;
 
-  const links = [
-    p.url          ? `<a class="lnk" href="${esc(p.url)}"          target="_blank">TUF</a>`  : '',
-    p.practiceUrl  ? `<a class="lnk" href="${esc(p.practiceUrl)}"  target="_blank">LC</a>`   : '',
-    p.youtubeUrl   ? `<a class="lnk" href="${esc(p.youtubeUrl)}"   target="_blank">YT</a>`   : '',
-  ].filter(Boolean).join('');
+  const res = [
+    p.youtubeUrl ? `<a class="res-icon yt" href="${esc(p.youtubeUrl)}" target="_blank" title="YouTube">▶</a>` : '',
+    p.url        ? `<a class="res-icon tuf" href="${esc(p.url)}"        target="_blank" title="Article">A</a>`  : '',
+  ].filter(Boolean).join('') || `<span class="res-none">—</span>`;
 
-  return `<tr data-step="${esc(p.step)}"${hidden ? ' class="group-hidden"' : ''}>
-    <td class="num">${p.order + 1}</td>
-    <td class="title-cell">${esc(p.title)}<br><span style="font-size:11px;color:var(--muted)">${esc(p.subsection)}</span></td>
-    <td class="step-cell step-col" title="${esc(p.step)}">${esc(p.step)}</td>
-    <td><span class="diff diff-${esc(p.difficulty)}">${esc(p.difficulty)}</span></td>
-    <td>
-      <select class="status-select" data-id="${esc(p.id)}">${statusOpts}</select>
+  return `<tr data-id="${esc(p.id)}">
+    <td class="td-status">
+      <button class="status-btn" data-id="${esc(p.id)}" data-status="${esc(p.status)}" title="${STATUS_LABEL[p.status]}">
+        ${statusIcon(p.status)}
+      </button>
     </td>
-    <td><div class="links">${links}</div></td>
+    <td class="td-title">
+      <span class="problem-name${done ? ' done' : ''}">${esc(p.title)}</span>
+    </td>
+    <td class="td-solve">${solve}</td>
+    <td class="td-res"><div class="res-links">${res}</div></td>
+    <td class="td-diff"><span class="diff diff-${esc(p.difficulty)}">${esc(p.difficulty)}</span></td>
   </tr>`;
 }
 
-function rebuildStepStats() {
-  const DONE = ['completed', 'solved_with_help'];
-  const stepMap = {};
-  for (const p of allProblems) {
-    if (!stepMap[p.step]) stepMap[p.step] = { done: 0, total: 0 };
-    stepMap[p.step].total++;
-    if (DONE.includes(p.status)) stepMap[p.step].done++;
+function statusIcon(status) {
+  if (status === 'completed' || status === 'solved_with_help') {
+    const opacity = status === 'solved_with_help' ? 'opacity:.75' : '';
+    return `<span class="status-icon ${esc(status)}" style="${opacity}">
+      <span class="checkmark"></span>
+    </span>`;
   }
-  for (const s of allSteps) {
-    const m = stepMap[s.step] || { done: 0, total: 0 };
-    s.done = m.done; s.total = m.total;
+  if (status === 'revision_needed') {
+    return `<span class="status-icon revision_needed">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M5 1l1.12 2.27 2.5.36-1.81 1.76.43 2.49L5 6.77 2.76 7.88l.43-2.49L1.38 3.63l2.5-.36L5 1z" fill="#f97316"/>
+      </svg>
+    </span>`;
+  }
+  if (status === 'attempted') {
+    return `<span class="status-icon attempted">
+      <span class="att-dash"></span>
+    </span>`;
+  }
+  // pending
+  return `<span class="status-icon pending"></span>`;
+}
+
+// ── Events ───────────────────────────────────────────────────────
+let activePopoverBtn = null;
+const popover = document.getElementById('statusPopover');
+
+document.getElementById('sheetWrap').addEventListener('click', (e) => {
+  const stepHeader = e.target.closest('.step-header');
+  if (stepHeader) {
+    const step = stepHeader.dataset.step;
+    if (stepCollapsed.has(step)) stepCollapsed.delete(step);
+    else stepCollapsed.add(step);
+    render();
+    return;
+  }
+
+  const subHeader = e.target.closest('.sub-header');
+  if (subHeader) {
+    const key = subHeader.dataset.subkey;
+    if (subCollapsed.has(key)) subCollapsed.delete(key);
+    else subCollapsed.add(key);
+    render();
+    return;
+  }
+
+  const statusBtn = e.target.closest('.status-btn');
+  if (statusBtn) {
+    e.stopPropagation();
+    openPopover(statusBtn);
+    return;
+  }
+});
+
+function openPopover(btn) {
+  if (activePopoverBtn === btn) { closePopover(); return; }
+  activePopoverBtn = btn;
+  const currentStatus = btn.dataset.status;
+
+  popover.innerHTML = VALID_STATUSES.map((s) => `
+    <div class="status-option${s === currentStatus ? ' selected' : ''}" data-status="${s}">
+      <span class="opt-dot" style="background:${STATUS_DOT_COLOR[s]}"></span>
+      ${STATUS_LABEL[s]}
+    </div>`).join('');
+
+  popover.querySelectorAll('.status-option').forEach((opt) => {
+    opt.addEventListener('click', async () => {
+      const newStatus = opt.dataset.status;
+      const id = btn.dataset.id;
+      closePopover();
+      await updateStatus(id, newStatus);
+    });
+  });
+
+  // Position popover
+  const rect = btn.getBoundingClientRect();
+  popover.style.top  = (rect.bottom + 4) + 'px';
+  popover.style.left = (rect.left - 60)  + 'px';
+  popover.classList.add('visible');
+}
+
+function closePopover() {
+  popover.classList.remove('visible');
+  activePopoverBtn = null;
+}
+
+document.addEventListener('click', (e) => {
+  if (!popover.contains(e.target) && !e.target.closest('.status-btn')) closePopover();
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePopover(); });
+
+async function updateStatus(id, status) {
+  try {
+    await fetch(`/api/problems/${id}/status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    });
+    const p = allProblems.find((x) => x.id === id);
+    if (p) p.status = status;
+    render();
+  } catch (e) {
+    console.error('Failed to update status:', e);
   }
 }
 
-// Sort on column header click
-document.querySelectorAll('th[data-col]').forEach((th) => {
-  th.addEventListener('click', () => {
-    const col = th.dataset.col;
-    if (sortCol === col) sortAsc = !sortAsc;
-    else { sortCol = col; sortAsc = true; }
-    document.querySelectorAll('th').forEach((h) => h.classList.remove('sorted'));
-    th.classList.add('sorted');
-    th.querySelector('.sort-icon').textContent = sortAsc ? '↑' : '↓';
-    renderTable();
+// ── Filters ──────────────────────────────────────────────────────
+['searchInput', 'filterStatus', 'filterDiff'].forEach((id) => {
+  document.getElementById(id).addEventListener('input', () => {
+    // Reset collapsed state when filtering so results are visible
+    const query = document.getElementById('searchInput').value.trim() ||
+                  document.getElementById('filterStatus').value ||
+                  document.getElementById('filterDiff').value;
+    if (query) { stepCollapsed.clear(); subCollapsed.clear(); }
+    render();
   });
-});
-
-// Filter inputs
-['searchInput', 'filterStatus', 'filterDiff', 'filterStep'].forEach((id) => {
-  document.getElementById(id).addEventListener('input', renderTable);
 });
 
 loadSheet();
