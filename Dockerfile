@@ -15,6 +15,7 @@ RUN npm ci --omit=dev
 
 # Copy application source
 COPY lib/        ./lib/
+COPY routes/     ./routes/
 COPY public/     ./public/
 COPY server.js   ./
 COPY striver_a2z_complete_sheet.csv ./
