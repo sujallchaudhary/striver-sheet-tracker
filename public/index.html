@@ -3,726 +3,283 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DSA Tracker</title>
+<meta name="color-scheme" content="dark">
+<title>DSA Studio</title>
 <style>
-  :root {
-    --page: #0f0f0e; --surface: #181817; --surface-2: #222221;
-    --ink: #e8e7e2; --ink-2: #a09f99; --muted: #5e5d57;
-    --grid: #2e2e2c; --border: rgba(255,255,255,0.07);
-    --accent: #3987e5; --accent-deep: #86b6ef; --accent-soft: #0e2f5c;
-    --good: #22c55e; --good-text: #22c55e;
-    --warn: #f59e0b; --serious: #f97316; --critical: #ef4444;
-    --panel-w: 340px;
-    --header-h: 48px;
-  }
-  @media (prefers-color-scheme: light) {
-    :root {
-      --page: #f5f5f3; --surface: #ffffff; --surface-2: #f0efeb;
-      --ink: #0b0b0a; --ink-2: #52514e; --muted: #898781;
-      --grid: #e1e0d9; --border: rgba(11,11,11,0.08);
-      --accent: #2563eb; --accent-deep: #1c4fad; --accent-soft: #dbeafe;
-      --good: #16a34a; --good-text: #15803d;
-    }
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--page); color: var(--ink);
-    font: 14px/1.5 "SF Pro Text", system-ui, -apple-system, "Segoe UI", sans-serif;
-    display: flex; flex-direction: column; height: 100vh; overflow: hidden;
-  }
-
-  /* ── Top bar ── */
-  .topbar {
-    height: var(--header-h); min-height: var(--header-h);
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 20px; border-bottom: 1px solid var(--border);
-    background: var(--surface); z-index: 10; flex-shrink: 0;
-  }
-  .topbar-left { display: flex; align-items: center; gap: 10px; }
-  .topbar-logo { font-size: 15px; font-weight: 700; letter-spacing: -.02em; }
-  .topbar-logo span { color: var(--accent); }
-  .topbar-sub { font-size: 12px; color: var(--muted); }
-  .topbar-date { font-size: 12px; color: var(--muted); }
-  .topbar-nav-link {
-    font: 600 12px system-ui, sans-serif; color: var(--muted); text-decoration: none;
-    padding: 5px 11px; border-radius: 7px; border: 1px solid var(--grid);
-    transition: all .15s;
-  }
-  .topbar-nav-link:hover { color: var(--ink); border-color: var(--muted); }
-  .topbar-nav-link.active { color: var(--accent-deep); border-color: var(--accent); background: var(--accent-soft); }
-
-  /* ── IDE body ── */
-  .ide-body { display: flex; flex: 1; min-height: 0; overflow: hidden; }
-
-  /* ── Main panel (left) ── */
-  .main-panel { flex: 1; min-width: 0; overflow-y: auto; padding: 24px 28px 60px; }
-  .main-panel::-webkit-scrollbar { width: 6px; }
-  .main-panel::-webkit-scrollbar-track { background: transparent; }
-  .main-panel::-webkit-scrollbar-thumb { background: var(--grid); border-radius: 99px; }
-
-  h2 { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 28px 0 12px; }
-  h2:first-child { margin-top: 0; }
-
-  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
-  .tile { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
-  .tile .label { font-size: 11px; color: var(--muted); margin-bottom: 4px; font-weight: 500; }
-  .tile .value { font-size: 24px; font-weight: 700; line-height: 1; }
-  .tile .sub { font-size: 11px; color: var(--ink-2); margin-top: 4px; }
-
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; transition: border-color .15s; }
-  .card:hover { border-color: var(--muted); }
-  .card-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .slot { color: var(--muted); font-weight: 600; font-size: 12px; }
-  .title { font-weight: 600; font-size: 14px; }
-  .badge { font-size: 10px; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--border); color: var(--ink-2); font-weight: 500; }
-  .badge.revision { background: var(--accent-soft); color: var(--accent-deep); border-color: transparent; }
-  .diff { font-size: 11px; color: var(--muted); }
-  .meta { font-size: 11.5px; color: var(--muted); margin: 4px 0 8px; }
-  .links { display: flex; margin-bottom: 10px; }
-  .links a { font-size: 11.5px; color: var(--accent); text-decoration: none; margin-right: 14px; opacity: .85; }
-  .links a:hover { opacity: 1; text-decoration: underline; }
-  .statuses { display: flex; gap: 5px; flex-wrap: wrap; }
-  .statuses button { font: 500 11.5px system-ui, sans-serif; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--grid); background: transparent; color: var(--ink-2); cursor: pointer; transition: all .12s; }
-  .statuses button:hover { border-color: var(--muted); color: var(--ink); }
-  .statuses button.active { background: var(--ink); color: var(--page); border-color: var(--ink); }
-
-  .status-chip { font-size: 11px; font-weight: 600; margin-left: auto; display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
-  .dot { width: 7px; height: 7px; border-radius: 99px; }
-  .s-completed .dot { background: var(--good); } .s-completed { color: var(--good-text); }
-  .s-solved_with_help .dot { background: var(--good); } .s-solved_with_help { color: var(--good-text); }
-  .s-attempted .dot { background: var(--serious); } .s-attempted { color: var(--ink-2); }
-  .s-revision_needed .dot { background: var(--warn); } .s-revision_needed { color: var(--ink-2); }
-  .s-pending .dot { background: var(--grid); } .s-pending { color: var(--muted); }
-  .s-needs_resolve .dot { background: var(--warn); animation: pulse 2s ease infinite; } .s-needs_resolve { color: var(--warn); }
-  .s-re_solved .dot { background: var(--good); } .s-re_solved { color: var(--good-text); }
-
-  .add-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
-  .add-row input { flex: 1; min-width: 200px; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--grid); background: var(--surface); color: var(--ink); font: 13px system-ui, sans-serif; }
-  .add-row input:focus { outline: none; border-color: var(--accent); }
-
-  .mini-btn { padding: 6px 12px; border-radius: 7px; border: 1px solid var(--grid); background: transparent; color: var(--ink-2); font: 600 12px system-ui, sans-serif; cursor: pointer; transition: all .12s; }
-  .mini-btn:hover { border-color: var(--muted); color: var(--ink); }
-  .mini-btn:disabled { opacity: .4; cursor: default; }
-  .inline-result { font-size: 12px; color: var(--ink-2); }
-
-  .topic { display: flex; align-items: center; gap: 12px; padding: 5px 0; }
-  .topic .name { flex: 0 0 200px; font-size: 12.5px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .bar { flex: 1; height: 6px; border-radius: 99px; background: var(--grid); overflow: hidden; }
-  .bar > div { height: 100%; border-radius: 99px; background: var(--accent); transition: width .3s ease; }
-  .topic .count { flex: 0 0 65px; text-align: right; font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
-
-  .hist-day { margin-bottom: 14px; }
-  .hist-date { font-size: 12px; font-weight: 600; color: var(--ink-2); margin-bottom: 4px; }
-  .hist-item { font-size: 12.5px; color: var(--ink-2); display: flex; gap: 6px; align-items: center; padding: 2px 0; }
-
-  .settings { margin-top: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
-  .settings summary { padding: 10px 16px; cursor: pointer; font-size: 13px; color: var(--ink-2); user-select: none; }
-  .settings-body { padding: 4px 16px 16px; border-top: 1px solid var(--grid); }
-  .setting-row { margin: 12px 0; }
-  .setting-row label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-2); margin-bottom: 5px; }
-  .setting-row .hint { font-weight: 400; color: var(--muted); }
-  .setting-row select, .setting-row input { padding: 6px 10px; border-radius: 7px; border: 1px solid var(--grid); background: var(--page); color: var(--ink); font: 13px system-ui, sans-serif; max-width: 100%; }
-  .topic-checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 2px 14px; }
-  .topic-checks label { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 400; color: var(--ink-2); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  #saveSettings { margin-top: 8px; padding: 7px 16px; border-radius: 7px; border: none; background: var(--accent); color: #fff; font: 600 13px system-ui, sans-serif; cursor: pointer; }
-
-  /* ── Chat panel (right) ── */
-  .chat-panel {
-    width: var(--panel-w); flex-shrink: 0;
-    border-left: 1px solid var(--border);
-    background: var(--surface);
-    display: flex; flex-direction: column;
-    transition: width .28s cubic-bezier(.4,0,.2,1),
-                border-color .28s cubic-bezier(.4,0,.2,1);
-    overflow: hidden;
-  }
-  .chat-panel.collapsed {
-    width: 0;
-    border-left-color: transparent;
-  }
-  .chat-panel-header {
-    padding: 0 14px; height: var(--header-h); min-height: var(--header-h);
-    display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid var(--border); flex-shrink: 0;
-    min-width: var(--panel-w);
-  }
-  .chat-panel-title {
-    font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
-    color: var(--muted); display: flex; align-items: center; gap: 7px;
-    white-space: nowrap;
-  }
-  .chat-panel-title .ai-dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: var(--good); box-shadow: 0 0 6px var(--good);
-    animation: pulse 2s ease infinite;
-  }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-  .chat-mode-badge { font-size: 10px; padding: 2px 7px; border-radius: 99px; border: 1px solid var(--grid); color: var(--muted); font-weight: 500; }
-
-  /* Topbar chat toggle button */
-  #chatTopbarBtn {
-    display: flex; align-items: center; gap: 6px;
-    padding: 5px 11px; border-radius: 7px;
-    border: 1px solid var(--grid); background: transparent;
-    color: var(--muted); font: 600 12px system-ui, sans-serif;
-    cursor: pointer; transition: all .15s; white-space: nowrap;
-  }
-  #chatTopbarBtn:hover { color: var(--ink); border-color: var(--muted); }
-  #chatTopbarBtn.active {
-    background: var(--accent-soft); color: var(--accent-deep);
-    border-color: var(--accent);
-  }
-  #chatTopbarBtn .btn-dot {
-    width: 6px; height: 6px; border-radius: 50%; background: currentColor;
-    animation: pulse 2s ease infinite;
-  }
-
-  .chat-messages { flex: 1; overflow-y: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
-  .chat-messages::-webkit-scrollbar { width: 4px; }
-  .chat-messages::-webkit-scrollbar-track { background: transparent; }
-  .chat-messages::-webkit-scrollbar-thumb { background: var(--grid); border-radius: 99px; }
-
-  .msg { display: flex; flex-direction: column; gap: 2px; animation: msgIn .2s ease; }
-  @keyframes msgIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
-  .msg-meta { font-size: 10px; color: var(--muted); }
-  .msg-bubble { padding: 8px 11px; border-radius: 10px; line-height: 1.5; word-break: break-word; font-size: 13px; white-space: pre-wrap; }
-  .msg.user { align-items: flex-end; }
-  .msg.user .msg-bubble { background: var(--accent); color: #fff; border-bottom-right-radius: 3px; white-space: normal; }
-  .msg.user .msg-meta { color: var(--accent-deep); }
-  .msg.assistant { align-items: flex-start; }
-  .msg.assistant .msg-bubble { background: var(--surface-2); color: var(--ink); border-bottom-left-radius: 3px; }
-  .msg.assistant.error .msg-bubble { background: rgba(239,68,68,.12); color: var(--critical); }
-
-  .msg-update { font-size: 11.5px; padding: 6px 0 0; border-top: 1px solid var(--grid); margin-top: 6px; display: flex; flex-direction: column; gap: 3px; }
-  .msg-update-item { display: flex; align-items: center; gap: 5px; color: var(--ink-2); }
-  .msg-update-item .dot { flex-shrink: 0; }
-
-  .typing-indicator .msg-bubble { display: flex; align-items: center; gap: 4px; }
-  .typing-indicator .dot-anim { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: bounce .9s ease infinite; }
-  .typing-indicator .dot-anim:nth-child(2) { animation-delay: .15s; }
-  .typing-indicator .dot-anim:nth-child(3) { animation-delay: .3s; }
-  @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-5px)} }
-
-  .chat-input-area { padding: 10px 12px 12px; border-top: 1px solid var(--border); flex-shrink: 0; }
-  .chat-hint-small { font-size: 10.5px; color: var(--muted); margin-bottom: 7px; line-height: 1.4; }
-  .chat-input-row { display: flex; gap: 7px; }
-  .chat-input-row textarea {
-    flex: 1; resize: none; padding: 8px 11px; border-radius: 8px;
-    border: 1px solid var(--grid); background: var(--surface-2);
-    color: var(--ink); font: 13px system-ui, sans-serif;
-    line-height: 1.45; min-height: 38px; max-height: 120px; overflow-y: auto;
-    transition: border-color .15s;
-  }
-  .chat-input-row textarea:focus { outline: none; border-color: var(--accent); }
-  .chat-input-row textarea::placeholder { color: var(--muted); }
-  #chatSendBtn {
-    padding: 0 12px; border-radius: 8px; border: none;
-    background: var(--accent); color: #fff; cursor: pointer;
-    font-size: 17px; flex-shrink: 0; align-self: flex-end; height: 38px;
-    transition: opacity .15s;
-  }
-  #chatSendBtn:disabled { opacity: .4; cursor: default; }
-  #chatSendBtn:hover:not(:disabled) { opacity: .85; }
-
-  @media (max-width: 760px) { .chat-panel { display: none; } }
-  @media (max-width: 640px) { .topic .name { flex-basis: 120px; } .main-panel { padding: 16px 14px 60px; } }
+:root {
+  color-scheme:dark;
+  --bg:#020203; --surface:rgba(13,13,17,.68); --surface-2:rgba(255,255,255,.045); --surface-3:rgba(255,255,255,.075);
+  --text:#f7f7fa; --text-2:#b0b0bd; --muted:#6f707e; --line:rgba(255,255,255,.085);
+  --primary:#8b7cff; --primary-2:#b2a9ff; --primary-soft:rgba(139,124,255,.14);
+  --cyan:#4de3df; --green:#45dfa0; --amber:#f7c45c; --orange:#ff8b61; --red:#ff6680;
+  --shadow:0 26px 80px rgba(0,0,0,.58); --glass-shadow:inset 0 1px 0 rgba(255,255,255,.055),0 20px 50px rgba(0,0,0,.26); --radius:18px; --coach:390px;
+}
+*{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;min-height:100vh;min-height:100dvh;background:var(--bg);color:var(--text);font:14px/1.5 Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit} button{color:inherit} a{color:inherit}.hidden{display:none!important}
+.topbar{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:30;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(18px)}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none}.brand-mark{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(145deg,var(--primary),#4d9cff);color:#fff;font-weight:850;box-shadow:0 8px 24px rgba(103,88,232,.28)}
+.brand-copy strong{display:block;font-size:14px;letter-spacing:-.02em}.brand-copy span{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.top-actions{display:flex;align-items:center;gap:9px}.nav-link,.ghost-btn,.coach-toggle,.mini-btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;text-decoration:none;font-weight:650;font-size:12px;cursor:pointer;transition:.16s ease}.nav-link:hover,.ghost-btn:hover,.mini-btn:hover{border-color:var(--muted);transform:translateY(-1px)}
+.coach-toggle{display:flex;align-items:center;gap:7px;border-color:transparent;background:var(--primary);color:#fff}.coach-toggle .spark{font-size:15px}.date-label{font-size:12px;color:var(--muted);margin-right:4px}
+.app-shell{display:grid;grid-template-columns:minmax(0,1fr) var(--coach);min-height:calc(100dvh - 64px)}.app-shell.coach-closed{grid-template-columns:minmax(0,1fr)}.app-shell.coach-closed .coach-panel{display:none}
+.main{min-width:0;padding:28px clamp(18px,3.5vw,52px) 72px;overflow:hidden}.content{max-width:1120px;margin:0 auto}
+</style>
+<style>
+.today-hero{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:28px;align-items:center;padding:30px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(135deg,var(--surface),color-mix(in srgb,var(--primary) 9%,var(--surface)));box-shadow:var(--shadow)}
+.today-hero:after{content:"";position:absolute;width:260px;height:260px;border-radius:50%;right:-110px;top:-140px;background:radial-gradient(circle,rgba(61,219,217,.2),transparent 66%);pointer-events:none}.eyebrow,.section-kicker{font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--primary-2)}
+.hero-title{margin:7px 0 6px;font-size:clamp(27px,4vw,42px);line-height:1.08;letter-spacing:-.045em}.hero-sub{color:var(--text-2);max-width:620px}.hero-progress{width:116px;height:116px;border-radius:50%;display:grid;place-items:center;position:relative;background:conic-gradient(var(--cyan) var(--progress,0%),var(--surface-3) 0)}.hero-progress:before{content:"";position:absolute;inset:9px;border-radius:50%;background:var(--surface)}.hero-progress strong,.hero-progress span{position:relative;z-index:1;text-align:center}.hero-progress strong{font-size:27px;line-height:1;display:block}.hero-progress span{font-size:10px;color:var(--muted);display:block;margin-top:3px}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}.stat{padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:color-mix(in srgb,var(--surface-2) 76%,transparent)}.stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.stat-value{font-size:20px;font-weight:800;margin-top:2px}.stat-value small{font-size:11px;font-weight:600;color:var(--muted)}
+.section-head{display:flex;align-items:end;justify-content:space-between;gap:18px;margin:34px 0 13px}.section-head h2{margin:3px 0 0;font-size:21px;letter-spacing:-.035em}.section-note{color:var(--muted);font-size:12px}.assignment-list{display:grid;gap:10px}
+.problem-card{position:relative;display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:15px;align-items:start;padding:18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);transition:.18s ease}.problem-card:hover{border-color:color-mix(in srgb,var(--primary) 45%,var(--line));transform:translateY(-1px);box-shadow:0 12px 30px rgba(0,0,0,.09)}.problem-card.done{opacity:.78}.slot-box{width:44px;height:44px;border-radius:13px;background:var(--surface-2);display:grid;place-items:center;color:var(--muted);font-weight:800}.problem-main{min-width:0}.problem-title-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.problem-title{font-size:15px;font-weight:750;letter-spacing:-.015em}.tag{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;padding:3px 7px;border-radius:99px;background:var(--surface-3);color:var(--text-2)}.tag.revision{background:var(--primary-soft);color:var(--primary-2)}.difficulty{font-size:10px;color:var(--muted)}.problem-meta{font-size:11px;color:var(--muted);margin:4px 0 11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.problem-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.status-btn{border:1px solid var(--line);background:transparent;border-radius:9px;padding:6px 9px;font-size:10.5px;color:var(--text-2);cursor:pointer}.status-btn:hover{border-color:var(--muted);color:var(--text)}.status-btn.active{background:var(--text);border-color:var(--text);color:var(--bg)}.problem-links{display:flex;gap:6px;margin-top:9px}.problem-link{font-size:10.5px;color:var(--primary-2);text-decoration:none}.problem-link:hover{text-decoration:underline}.card-side{display:flex;flex-direction:column;align-items:flex-end;gap:9px}.state{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;color:var(--text-2)}.state-dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}.state.completed,.state.re_solved{color:var(--green)}.state.completed .state-dot,.state.re_solved .state-dot{background:var(--green)}.state.attempted{color:var(--orange)}.state.attempted .state-dot{background:var(--orange)}.state.needs_resolve{color:var(--amber)}.state.needs_resolve .state-dot{background:var(--amber)}
+.hint-btn{border:1px solid color-mix(in srgb,var(--primary) 38%,var(--line));background:var(--primary-soft);color:var(--primary-2);border-radius:10px;padding:7px 10px;font-size:11px;font-weight:750;cursor:pointer;white-space:nowrap}.hint-btn:hover{background:var(--primary);color:#fff}.empty-card{padding:32px;text-align:center;border:1px dashed var(--line);border-radius:var(--radius);color:var(--muted)}
+.add-bar{display:flex;gap:8px;align-items:center;margin-top:12px;padding:11px;border:1px dashed var(--line);border-radius:14px}.field{width:100%;border:1px solid var(--line);background:var(--surface-2);color:var(--text);border-radius:10px;padding:9px 11px;outline:none}.field:focus{border-color:var(--primary)}.add-bar .field{flex:1}.inline-result{font-size:11px;color:var(--text-2)}
+.lower-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:16px;margin-top:34px}.panel{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:19px}.panel-title{font-size:13px;font-weight:800;margin-bottom:14px}.topic{display:grid;grid-template-columns:minmax(120px,1fr) minmax(90px,1.3fr) 48px;gap:10px;align-items:center;padding:6px 0}.topic-name{font-size:11px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bar{height:6px;background:var(--surface-3);border-radius:99px;overflow:hidden}.bar>div{height:100%;background:linear-gradient(90deg,var(--primary),var(--cyan));border-radius:inherit}.topic-count{text-align:right;font-size:10px;color:var(--muted)}.history-day+ .history-day{margin-top:13px;padding-top:13px;border-top:1px solid var(--line)}.history-date{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}.history-item{font-size:11px;color:var(--text-2);padding:3px 0;display:flex;gap:6px}.history-item:before{content:"";width:5px;height:5px;border-radius:50%;background:var(--line);margin-top:6px;flex:none}
+</style>
+<style>
+.settings{margin-top:18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden}.settings summary{padding:15px 18px;cursor:pointer;font-weight:750;list-style:none}.settings summary::-webkit-details-marker{display:none}.settings summary:after{content:"＋";float:right;color:var(--muted)}.settings[open] summary:after{content:"−"}.settings-body{padding:4px 18px 20px;border-top:1px solid var(--line)}.settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 20px}.setting-row{margin-top:16px}.setting-row.full{grid-column:1/-1}.setting-row label{display:block;font-size:11px;font-weight:750;color:var(--text-2);margin-bottom:6px}.setting-row .hint{font-weight:450;color:var(--muted)}.setting-row input,.setting-row select{width:100%;border:1px solid var(--line);background:var(--surface-2);color:var(--text);border-radius:9px;padding:8px 10px}.topic-checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:5px 12px;max-height:130px;overflow:auto}.topic-checks label{display:flex;gap:6px;align-items:center;font-weight:450;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.settings-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:18px}.primary-btn{border:0;background:var(--primary);color:#fff;border-radius:10px;padding:9px 14px;font-weight:750;font-size:12px;cursor:pointer}.primary-btn:disabled,.mini-btn:disabled{opacity:.45;cursor:default}
+.coach-panel{position:sticky;top:64px;height:calc(100dvh - 64px);border-left:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;min-width:0;z-index:25}.coach-head{height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid var(--line)}.coach-brand{display:flex;gap:9px;align-items:center}.coach-orb{width:29px;height:29px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(145deg,var(--primary),#4d9cff);color:#fff}.coach-title strong{display:block;font-size:12px}.coach-title span{display:block;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.coach-head-actions{display:flex;align-items:center;gap:6px}.expand-coach,.close-coach{width:31px;height:31px;border-radius:9px;border:1px solid var(--line);background:transparent;cursor:pointer;color:var(--muted);display:grid;place-items:center;text-decoration:none}.expand-coach:hover,.close-coach:hover{color:var(--text);border-color:var(--muted)}.coach-context{padding:13px 14px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--primary) 4%,var(--surface))}.coach-context-label{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px}.context-row{display:flex;gap:6px}.context-row .field{font-size:11px;padding:8px 9px}.clear-context{border:1px solid var(--line);background:var(--surface-2);border-radius:9px;padding:0 9px;cursor:pointer;color:var(--muted)}.selected-meta{font-size:10px;color:var(--muted);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hint-levels{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:10px}.level-btn{border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:8px;padding:6px 2px;font-size:9px;font-weight:700;cursor:pointer}.level-btn.active{background:var(--primary-soft);border-color:var(--primary);color:var(--primary-2)}
+.chat-messages{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:12px}.msg{display:flex;flex-direction:column;gap:3px;animation:msgIn .18s ease}@keyframes msgIn{from{opacity:0;transform:translateY(5px)}}.msg.user{align-items:flex-end}.msg-meta{font-size:9px;color:var(--muted)}.msg-bubble{max-width:94%;padding:9px 11px;border-radius:12px;background:var(--surface-2);font-size:12px;white-space:pre-wrap;word-break:break-word}.msg.user .msg-bubble{background:var(--primary);color:#fff;border-bottom-right-radius:3px}.msg.assistant .msg-bubble{border-bottom-left-radius:3px}.msg.error .msg-bubble{color:var(--red);background:color-mix(in srgb,var(--red) 10%,var(--surface-2))}.msg-update{margin-top:8px;padding-top:7px;border-top:1px solid var(--line);display:grid;gap:4px}.msg-update-item{font-size:10px;color:var(--text-2)}.typing .msg-bubble{display:flex;gap:4px}.bounce{width:5px;height:5px;border-radius:50%;background:var(--muted);animation:bounce .9s infinite}.bounce:nth-child(2){animation-delay:.12s}.bounce:nth-child(3){animation-delay:.24s}@keyframes bounce{40%{transform:translateY(-4px)}}
+.coach-compose{padding:12px 13px max(12px,env(safe-area-inset-bottom));border-top:1px solid var(--line)}.quick-row{display:flex;gap:5px;overflow-x:auto;margin-bottom:8px}.quick-btn{border:1px solid var(--line);background:transparent;color:var(--text-2);border-radius:99px;padding:5px 9px;font-size:9px;white-space:nowrap;cursor:pointer}.quick-btn:hover{border-color:var(--primary);color:var(--primary-2)}.compose-row{display:flex;gap:7px;align-items:end}.compose-row textarea{flex:1;resize:none;max-height:120px;min-height:40px;border:1px solid var(--line);background:var(--surface-2);color:var(--text);border-radius:11px;padding:9px 10px;outline:none}.compose-row textarea:focus{border-color:var(--primary)}.send-btn{width:40px;height:40px;border:0;border-radius:11px;background:var(--primary);color:#fff;font-size:17px;cursor:pointer}.send-btn:disabled{opacity:.45}.coach-footnote{font-size:9px;color:var(--muted);margin-top:6px}.mobile-overlay{display:none}
+@media(max-width:980px){.app-shell{display:block}.coach-panel{position:fixed;right:0;top:0;height:100dvh;width:min(420px,92vw);box-shadow:var(--shadow);transform:translateX(105%);transition:transform .22s ease;border-left:1px solid var(--line)}.app-shell.coach-open .coach-panel{display:flex;transform:translateX(0)}.app-shell.coach-closed .coach-panel{display:flex}.mobile-overlay{display:block;position:fixed;inset:0;background:rgba(4,6,10,.58);z-index:24;opacity:0;pointer-events:none;transition:.2s}.app-shell.coach-open .mobile-overlay{opacity:1;pointer-events:auto}}
+@media(max-width:720px){.topbar{padding:0 14px}.date-label,.brand-copy span{display:none}.main{padding:18px 13px 55px}.today-hero{grid-template-columns:1fr;padding:22px}.hero-progress{display:none}.stats-row{grid-template-columns:repeat(3,1fr)}.stat{padding:11px}.stat-value{font-size:17px}.problem-card{grid-template-columns:39px minmax(0,1fr);padding:14px;gap:10px}.slot-box{width:36px;height:36px}.card-side{grid-column:2;align-items:flex-start;flex-direction:row}.lower-grid{grid-template-columns:1fr}.settings-grid{grid-template-columns:1fr}.setting-row.full{grid-column:auto}.add-bar{align-items:stretch;flex-wrap:wrap}.add-bar .field{flex-basis:100%}.nav-link{display:none}.section-note{display:none}}
+@media(max-width:420px){.brand-copy strong{font-size:12px}.coach-toggle{padding:8px 10px}.stats-row{gap:6px}.stat-label{font-size:8px}.status-btn{padding:6px 7px}.problem-actions{gap:4px}}
+</style>
+<style>
+/* Black glass theme */
+html{background:#020203}body{background:
+  radial-gradient(circle at 12% 4%,rgba(95,76,220,.11),transparent 29rem),
+  radial-gradient(circle at 72% 34%,rgba(23,111,129,.07),transparent 34rem),
+  radial-gradient(circle at 44% 100%,rgba(73,52,155,.07),transparent 30rem),#020203;
+  background-attachment:fixed}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.18;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(to bottom,#000,transparent 76%)}
+.topbar{background:rgba(3,3,5,.7);border-color:rgba(255,255,255,.07);box-shadow:inset 0 -1px 0 rgba(255,255,255,.025);-webkit-backdrop-filter:blur(24px) saturate(135%);backdrop-filter:blur(24px) saturate(135%)}
+.brand-mark,.coach-orb{background:linear-gradient(145deg,rgba(162,148,255,.98),rgba(89,68,225,.92));box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 8px 30px rgba(98,76,238,.25)}
+.nav-link,.ghost-btn,.mini-btn{background:rgba(255,255,255,.035);box-shadow:inset 0 1px 0 rgba(255,255,255,.035);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.coach-toggle,.primary-btn,.send-btn{background:linear-gradient(135deg,#9385ff,#6755df);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 9px 28px rgba(89,65,216,.24)}
+.today-hero,.problem-card,.panel,.settings,.add-bar{background:linear-gradient(145deg,rgba(20,20,26,.72),rgba(8,8,11,.56));border-color:rgba(255,255,255,.09);box-shadow:var(--glass-shadow);-webkit-backdrop-filter:blur(22px) saturate(125%);backdrop-filter:blur(22px) saturate(125%)}
+.today-hero:before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(120deg,rgba(255,255,255,.055),transparent 24%,transparent 74%,rgba(139,124,255,.035))}
+.today-hero:after{background:radial-gradient(circle,rgba(111,93,245,.2),transparent 66%);filter:blur(3px)}
+.stat{background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));border-color:rgba(255,255,255,.075);box-shadow:inset 0 1px 0 rgba(255,255,255,.04);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.problem-card:hover{border-color:rgba(157,142,255,.34);background:linear-gradient(145deg,rgba(27,25,37,.78),rgba(10,10,14,.64));box-shadow:inset 0 1px 0 rgba(255,255,255,.075),0 22px 54px rgba(0,0,0,.38)}
+.slot-box,.tag,.field,.setting-row input,.setting-row select,.compose-row textarea,.msg-bubble{background:rgba(255,255,255,.045);box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+.status-btn,.hint-btn,.quick-btn,.level-btn,.clear-context,.close-coach,.expand-coach{background:rgba(255,255,255,.025);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.status-btn.active{background:rgba(247,247,250,.94);color:#050506;box-shadow:0 5px 18px rgba(255,255,255,.08)}
+.bar{background:rgba(255,255,255,.07)}.bar>div{box-shadow:0 0 18px rgba(77,227,223,.17)}
+.coach-panel{background:rgba(6,6,9,.76);border-color:rgba(255,255,255,.08);box-shadow:-22px 0 70px rgba(0,0,0,.32);-webkit-backdrop-filter:blur(30px) saturate(125%);backdrop-filter:blur(30px) saturate(125%)}
+.coach-head,.coach-context,.coach-compose{background:rgba(8,8,12,.35);border-color:rgba(255,255,255,.075);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.msg.assistant .msg-bubble{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.045);white-space:normal}.msg.user .msg-bubble{background:linear-gradient(135deg,rgba(139,124,255,.96),rgba(99,82,218,.96));box-shadow:0 8px 22px rgba(78,59,194,.18)}
+.md-content{line-height:1.65}.md-content>:first-child{margin-top:0}.md-content>:last-child{margin-bottom:0}.md-content p{margin:0 0 10px}.md-content h1,.md-content h2,.md-content h3,.md-content h4{margin:16px 0 7px;line-height:1.25;letter-spacing:-.02em}.md-content h1{font-size:18px}.md-content h2{font-size:16px}.md-content h3{font-size:14px}.md-content h4{font-size:12px}.md-content ul,.md-content ol{margin:7px 0 11px;padding-left:20px}.md-content li{margin:3px 0}.md-content blockquote{margin:10px 0;padding:7px 10px;border-left:2px solid var(--primary);background:rgba(139,124,255,.07);color:var(--text-2);border-radius:0 7px 7px 0}.md-content a{color:var(--primary-2);text-decoration:none}.md-content a:hover{text-decoration:underline}.md-content hr{border:0;border-top:1px solid var(--line);margin:14px 0}.md-inline-code{padding:2px 5px;border:1px solid rgba(255,255,255,.07);border-radius:5px;background:rgba(0,0,0,.42);color:#d7d2ff;font:11px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace}.md-code-block{margin:11px 0;border:1px solid rgba(255,255,255,.085);border-radius:10px;overflow:hidden;background:#050507}.md-code-head{height:31px;display:flex;align-items:center;justify-content:space-between;padding:0 9px;border-bottom:1px solid rgba(255,255,255,.065);background:rgba(255,255,255,.035);color:var(--muted);font:9px ui-monospace,SFMono-Regular,Menlo,monospace;text-transform:uppercase}.md-code-head button{border:0;background:transparent;color:var(--text-2);font-size:9px;cursor:pointer}.md-code-block pre{margin:0;padding:11px;overflow:auto}.md-code-block code{color:#e7e5f5;font:10.5px/1.65 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre;tab-size:2}.md-table-wrap{max-width:100%;overflow:auto;margin:10px 0}.md-table-wrap table{width:100%;border-collapse:collapse;font-size:10px}.md-table-wrap th,.md-table-wrap td{padding:6px 7px;border:1px solid var(--line);text-align:left}.md-table-wrap th{background:rgba(255,255,255,.04)}
+::selection{background:rgba(139,124,255,.38);color:#fff}::-webkit-scrollbar{width:7px;height:7px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:99px}::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.18)}
+@media(max-width:980px){.coach-panel{background:rgba(5,5,8,.88);box-shadow:-30px 0 80px rgba(0,0,0,.62)}.mobile-overlay{background:rgba(0,0,0,.72);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
+<header class="topbar">
+  <a class="brand" href="/">
+    <span class="brand-mark">A²</span>
+    <span class="brand-copy"><strong>DSA Studio</strong><span>Striver A2Z workspace</span></span>
+  </a>
+  <nav class="top-actions" aria-label="Primary navigation">
+    <span class="date-label" id="date"></span>
+    <a class="nav-link" href="/sheet.html">Explore sheet</a>
+    <button class="coach-toggle" id="coachToggle" aria-controls="coachPanel" aria-expanded="true"><span class="spark">✦</span> AI Coach</button>
+  </nav>
+</header>
+<div class="app-shell coach-open" id="appShell">
+  <main class="main"><div class="content">
+    <section class="today-hero" aria-labelledby="todayTitle">
+      <div>
+        <div class="eyebrow">Today's practice</div>
+        <h1 class="hero-title" id="todayTitle">Build consistency,<br>one problem at a time.</h1>
+        <p class="hero-sub" id="heroSub">Loading your daily plan…</p>
+        <div class="stats-row" id="statsRow"></div>
+      </div>
+      <div class="hero-progress" id="heroProgress"><div><strong id="heroPercent">0%</strong><span>today</span></div></div>
+    </section>
 
-<div class="topbar">
-  <div class="topbar-left">
-    <div class="topbar-logo">DSA <span>Tracker</span></div>
-    <div class="topbar-sub">Striver A2Z</div>
-  </div>
-  <div style="display:flex;align-items:center;gap:12px">
-    <div class="topbar-date" id="date"></div>
-    <a href="/sheet.html" class="topbar-nav-link">Sheet</a>
-    <button id="chatTopbarBtn" title="Toggle chat assistant">
-      <span class="btn-dot"></span>
-      Chat
-    </button>
-  </div>
-</div>
+    <section aria-labelledby="assignmentTitle">
+      <div class="section-head">
+        <div><div class="section-kicker">Focus queue</div><h2 id="assignmentTitle">Today's assignment</h2></div>
+        <div class="section-note" id="assignmentNote"></div>
+      </div>
+      <div class="assignment-list" id="assignment"></div>
+      <div class="add-bar">
+        <input class="field" id="addSearch" list="problemList" placeholder="Search a problem to add…" autocomplete="off">
+        <datalist id="problemList"></datalist>
+        <button class="mini-btn" type="button" id="addPick">Add problem</button>
+        <button class="mini-btn" type="button" id="addNext">＋ Next</button>
+        <span class="inline-result" id="addResult"></span>
+      </div>
+    </section>
 
-<div class="ide-body">
-
-  <!-- Left: main content -->
-  <div class="main-panel">
-
-    <h2>Overview</h2>
-    <div class="tiles" id="tiles"></div>
-
-    <h2>Today's Assignment</h2>
-    <div id="assignment"></div>
-    <div class="add-row" style="margin-top:8px">
-      <input id="addSearch" list="problemList" placeholder="Search a problem to add…">
-      <datalist id="problemList"></datalist>
-      <button type="button" class="mini-btn" id="addPick">Add</button>
-      <button type="button" class="mini-btn" id="addNext">＋ Next from queue</button>
-      <span class="inline-result" id="addResult"></span>
+    <div class="lower-grid">
+      <section class="panel"><div class="panel-title">Topic momentum</div><div id="topics"></div></section>
+      <section class="panel"><div class="panel-title">Recent practice</div><div id="history"></div></section>
     </div>
-
-    <h2>Topic Progress</h2>
-    <div id="topics"></div>
-
-    <h2>Recent Days</h2>
-    <div id="history"></div>
 
     <details class="settings" id="settingsPanel">
-      <summary>⚙︎ Settings</summary>
-      <div class="settings-body">
-        <div class="setting-row">
-          <label>Problems per day</label>
-          <input type="number" id="setCount" min="3" max="8" style="width:70px">
+      <summary>Workspace settings</summary>
+      <div class="settings-body"><div class="settings-grid">
+        <div class="setting-row"><label>Problems per day</label><input type="number" id="setCount" min="3" max="8"></div>
+        <div class="setting-row"><label>Current topic <span class="hint">— first priority</span></label><select id="setCurrent"><option value="">Follow sheet order</option></select></div>
+        <div class="setting-row full"><label>Preferred topics</label><div class="topic-checks" id="setPreferred"></div></div>
+        <div class="setting-row full"><label>Topics to revise <span class="hint">— automatic questions repeat no sooner than 30 days</span></label><div class="topic-checks" id="setRevision"></div></div>
+        <div class="setting-row full"><label>AI coach provider <span class="hint">— required for hints; tracker commands have a keyword fallback</span></label>
+          <select id="setProvider"><option value="auto">Auto — use available key</option><option value="anthropic">Claude (Anthropic)</option><option value="gemini">Gemini</option><option value="none">Off — keywords only</option></select>
+          <input type="password" id="setApiKey" placeholder="API key, or use an environment variable" style="margin-top:7px">
+          <input type="text" id="setModel" placeholder="Optional model override" style="margin-top:7px">
         </div>
-        <div class="setting-row">
-          <label>Current topic <span class="hint">(new problems come from here first)</span></label>
-          <select id="setCurrent"><option value="">Follow sheet order</option></select>
+        <div class="setting-row full"><label>Notion sync</label>
+          <input type="password" id="setNotionToken" placeholder="Notion integration secret (ntn_…)">
+          <input type="text" id="setNotionPage" placeholder="Parent page URL or ID" style="margin-top:7px">
+          <div class="settings-actions"><button class="mini-btn" type="button" id="notionSyncToday">Sync today</button><button class="mini-btn" type="button" id="notionSyncAll">Sync history</button><span class="inline-result" id="notionResult"></span></div>
         </div>
-        <div class="setting-row">
-          <label>Preferred topics <span class="hint">(prioritized after current topic)</span></label>
-          <div class="topic-checks" id="setPreferred"></div>
+        <div class="setting-row full"><label>Backup <span class="hint">— API keys are excluded</span></label>
+          <div class="settings-actions"><a class="mini-btn" href="/api/export" download>Export progress</a><button class="mini-btn" type="button" id="importBtn">Import progress</button><input type="file" id="importFile" accept=".json,application/json" hidden><span class="inline-result" id="importResult"></span></div>
         </div>
-        <div class="setting-row">
-          <label>Topics to revise <span class="hint">(finished problems cycle back every ~7 days)</span></label>
-          <div class="topic-checks" id="setRevision"></div>
-        </div>
-        <div class="setting-row">
-          <label>Chat AI provider <span class="hint">(falls back to keyword parsing without a key)</span></label>
-          <select id="setProvider">
-            <option value="auto">Auto (use whichever key is available)</option>
-            <option value="anthropic">Claude (Anthropic)</option>
-            <option value="gemini">Gemini</option>
-            <option value="none">Off — keyword parsing only</option>
-          </select>
-          <input type="password" id="setApiKey" placeholder="API key (or set ANTHROPIC_API_KEY / GEMINI_API_KEY env var)" style="margin-top:6px;width:100%">
-          <input type="text" id="setModel" placeholder="Model name (optional — default: claude-opus-4-8 / gemini-2.5-flash)" style="margin-top:6px;width:100%">
-        </div>
-        <div class="setting-row">
-          <label>Notion sync <span class="hint">(mirrors problems &amp; history to a Notion database)</span></label>
-          <input type="password" id="setNotionToken" placeholder="Notion integration secret (ntn_…)" style="width:100%">
-          <input type="text" id="setNotionPage" placeholder="Parent page URL or ID" style="margin-top:6px;width:100%">
-          <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <button type="button" class="mini-btn" id="notionSyncToday">Sync today</button>
-            <button type="button" class="mini-btn" id="notionSyncAll">Sync all history</button>
-            <span class="inline-result" id="notionResult"></span>
-          </div>
-        </div>
-        <div class="setting-row">
-          <label>Backup <span class="hint">(progress, history &amp; settings — API keys are never exported)</span></label>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <a class="mini-btn" href="/api/export" download style="text-decoration:none;display:inline-flex;align-items:center">Export progress</a>
-            <button type="button" class="mini-btn" id="importBtn">Import progress…</button>
-            <input type="file" id="importFile" accept=".json,application/json" style="display:none">
-            <span class="inline-result" id="importResult"></span>
-          </div>
-        </div>
-        <button id="saveSettings">Save &amp; regenerate today</button>
-        <span class="inline-result" id="settingsResult" style="margin-left:10px"></span>
-      </div>
+      </div><div class="settings-actions"><button class="primary-btn" id="saveSettings">Save & regenerate today</button><span class="inline-result" id="settingsResult"></span></div></div>
     </details>
+  </div></main>
 
-  </div>
-
-  <!-- Right: chat panel -->
-  <div class="chat-panel" id="chatPanel">
-    <div class="chat-panel-header">
-      <div class="chat-panel-title">
-        <span class="ai-dot"></span>
-        Chat assistant
-      </div>
-      <span class="chat-mode-badge" id="chatModeBadge">loading…</span>
+  <button class="mobile-overlay" id="coachOverlay" aria-label="Close AI coach"></button>
+  <aside class="coach-panel" id="coachPanel" aria-label="AI DSA coach">
+    <div class="coach-head">
+      <div class="coach-brand"><span class="coach-orb">✦</span><span class="coach-title"><strong>DSA Coach</strong><span id="chatModeBadge">Connecting…</span></span></div>
+      <div class="coach-head-actions"><a class="expand-coach" href="/coach.html" title="Open full-page coach">↗</a><button class="close-coach" id="closeCoach" aria-label="Close coach">×</button></div>
     </div>
-
-    <div class="chat-messages" id="chatMessages">
-      <div class="msg assistant">
-        <div class="msg-meta">Assistant</div>
-        <div class="msg-bubble">👋 Hey! Tell me what you solved today.
-
-e.g. "completed 1 and 3, couldn't crack 2" or "add two sum" or "remove problem 3"</div>
+    <div class="coach-context">
+      <div class="coach-context-label">Problem context</div>
+      <div class="context-row"><input class="field" id="coachProblem" list="coachProblemList" placeholder="Choose any sheet problem…" autocomplete="off"><datalist id="coachProblemList"></datalist><button class="clear-context" id="clearCoachProblem" title="Clear context">×</button></div>
+      <div class="selected-meta" id="selectedMeta">General DSA conversation</div>
+      <div class="hint-levels" id="hintLevels">
+        <button class="level-btn active" data-level="1">1 · Nudge</button><button class="level-btn" data-level="2">2 · Idea</button><button class="level-btn" data-level="3">3 · Steps</button><button class="level-btn" data-level="4">4 · Deep</button>
       </div>
     </div>
-
-    <div class="chat-input-area">
-      <div class="chat-hint-small" id="chatHint"></div>
-      <div class="chat-input-row">
-        <textarea id="chatInput" rows="1" placeholder="Tell me what you solved…"></textarea>
-        <button id="chatSendBtn" title="Send (Enter)">↑</button>
-      </div>
+    <div class="chat-messages" id="chatMessages" aria-live="polite">
+      <div class="msg assistant"><div class="msg-meta">Coach</div><div class="msg-bubble">Pick any problem and ask for a progressive hint. I can also update your tracker — try “completed 1” or “add Two Sum”.</div></div>
     </div>
-  </div>
-
+    <div class="coach-compose">
+      <div class="quick-row"><button class="quick-btn" id="getHint">Get hint</button><button class="quick-btn" id="nextHint">Next hint</button><button class="quick-btn" data-prompt="Review my current approach. Ask me to explain it first.">Review approach</button><button class="quick-btn" data-prompt="Help me reason about the time and space complexity.">Complexity</button></div>
+      <div class="compose-row"><textarea id="chatInput" rows="1" placeholder="Ask about the selected problem…"></textarea><button class="send-btn" id="chatSendBtn" title="Send (Enter)">↑</button></div>
+      <div class="coach-footnote" id="chatHint">Hints stay progressive—you control how much is revealed.</div>
+    </div>
+  </aside>
 </div>
-
+<script src="/markdown.js"></script>
 <script>
-// ── Chat panel collapse ─────────────────────────────────────────
-const chatPanel    = document.getElementById('chatPanel');
-const chatTopbarBtn = document.getElementById('chatTopbarBtn');
+const STATUS_LABEL={pending:'Pending',attempted:'Attempted',completed:'Completed',solved_with_help:'Solved w/ help',revision_needed:'Revision needed'};
+const STATUS_COLOR={completed:'var(--green)',solved_with_help:'var(--green)',attempted:'var(--orange)',revision_needed:'var(--amber)',pending:'var(--muted)'};
+const STATUS_BUTTONS=['completed','solved_with_help','attempted','revision_needed'];
+const MODE_NAME={anthropic:'Claude',gemini:'Gemini',rules:'Keyword mode'};
+const esc=(value)=>String(value??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let dashboardData=null,allProblems=null,problemById={},problemLabelToId={};
+let selectedProblemId=null,hintLevel=1,chatHistory=[],chatBusy=false;
+const COACH_STORAGE_KEY='dsaCoachConversationV1';
+function saveCoachState(){try{localStorage.setItem(COACH_STORAGE_KEY,JSON.stringify({problemId:selectedProblemId,hintLevel,history:chatHistory.slice(-40)}))}catch{}}
+function loadCoachState(){try{const state=JSON.parse(localStorage.getItem(COACH_STORAGE_KEY)||'null');if(!state||typeof state!=='object')return null;return{problemId:state.problemId==null?null:String(state.problemId),hintLevel:Math.min(4,Math.max(1,Number(state.hintLevel)||1)),history:(Array.isArray(state.history)?state.history:[]).filter((entry)=>entry&&['user','assistant'].includes(entry.role)&&typeof entry.content==='string').slice(-40)}}catch{return null}}
+async function restoreCoachState(){const state=loadCoachState();if(!state)return;chatHistory=state.history;selectedProblemId=state.problemId;setHintLevel(state.hintLevel);if(selectedProblemId){try{await selectCoachProblem(selectedProblemId,true)}catch{selectedProblemId=null}}if(chatHistory.length){coachMessages.innerHTML='';chatHistory.forEach((entry)=>appendMsg(entry.role,entry.content))}saveCoachState()}
 
-function setChatCollapsed(collapsed) {
-  chatPanel.classList.toggle('collapsed', collapsed);
-  chatTopbarBtn.classList.toggle('active', !collapsed);
-  try { localStorage.setItem('chatCollapsed', collapsed ? '1' : '0'); } catch {}
-}
+async function api(path,opts){const res=await fetch(path,opts);if(!res.ok){const text=await res.text();let msg=text;try{msg=JSON.parse(text).error||text}catch{}throw new Error(msg)}return res.json()}
+function isItemDone(it){return it.type==='revision'?it.completedToday:['completed','solved_with_help'].includes(it.status)}
+function stateFor(it){if(it.type==='revision')return it.completedToday?['re_solved','Re-solved ✓']:['needs_resolve','Needs re-solve'];if(it.status==='completed'||it.status==='solved_with_help')return ['completed',STATUS_LABEL[it.status]];return [it.status,STATUS_LABEL[it.status]]}
 
-chatTopbarBtn.addEventListener('click', () => setChatCollapsed(!chatPanel.classList.contains('collapsed')));
+function render(d){
+  dashboardData=d;
+  const date=new Date(d.date+'T00:00');
+  document.getElementById('date').textContent=date.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
+  const s=d.stats,pct=s.todayTotal?Math.round((s.todayDone/s.todayTotal)*100):100;
+  document.getElementById('heroSub').textContent=s.todayDone===s.todayTotal?'Daily plan complete. Nice work—protect the streak tomorrow.':`${s.todayTotal-s.todayDone} problem${s.todayTotal-s.todayDone===1?'':'s'} left · Current focus: ${s.currentTopic}`;
+  document.getElementById('heroProgress').style.setProperty('--progress',pct+'%');
+  document.getElementById('heroPercent').textContent=pct+'%';
+  document.getElementById('statsRow').innerHTML=`
+    <div class="stat"><div class="stat-label">Today</div><div class="stat-value">${s.todayDone}<small> / ${s.todayTotal}</small></div></div>
+    <div class="stat"><div class="stat-label">Streak</div><div class="stat-value">${s.streak}<small> day${s.streak===1?'':'s'}</small></div></div>
+    <div class="stat"><div class="stat-label">Sheet</div><div class="stat-value">${s.percent}<small>% done</small></div></div>`;
+  document.getElementById('assignmentNote').textContent=`${s.todayDone} of ${s.todayTotal} complete`;
 
-// Restore saved state (default: open)
-try {
-  const saved = localStorage.getItem('chatCollapsed');
-  setChatCollapsed(saved === '1');
-} catch {
-  setChatCollapsed(false);
-}
-
-const STATUS_LABEL = {
-  pending: 'Pending', attempted: 'Attempted', completed: 'Completed',
-  solved_with_help: 'Solved w/ help', revision_needed: 'Revision needed',
-};
-const STATUS_COLOR = {
-  completed: 'var(--good)', solved_with_help: 'var(--good)',
-  attempted: 'var(--serious)', revision_needed: 'var(--warn)', pending: 'var(--grid)',
-};
-const BUTTONS = ['completed', 'solved_with_help', 'attempted', 'revision_needed'];
-const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-
-async function api(path, opts) {
-  const res = await fetch(path, opts);
-  if (!res.ok) {
-    const text = await res.text();
-    let msg = text;
-    try { msg = JSON.parse(text).error || text; } catch {}
-    throw new Error(msg);
-  }
-  return res.json();
-}
-
-function render(d) {
-  document.getElementById('date').textContent = new Date(d.date + 'T00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
-
-  const s = d.stats;
-  document.getElementById('tiles').innerHTML = `
-    <div class="tile"><div class="label">Streak</div><div class="value">${s.streak}<span style="font-size:13px;color:var(--muted)"> day${s.streak===1?'':'s'}</span></div></div>
-    <div class="tile"><div class="label">Today</div><div class="value">${s.todayDone}<span style="font-size:13px;color:var(--muted)"> / ${s.todayTotal}</span></div></div>
-    <div class="tile"><div class="label">Solved overall</div><div class="value">${s.done}<span style="font-size:13px;color:var(--muted)"> / ${s.total}</span></div><div class="sub">${s.percent}% of sheet</div></div>
-    <div class="tile"><div class="label">Current topic</div><div class="value" style="font-size:13px;line-height:1.3;padding-top:2px">${esc(s.currentTopic)}</div><div class="sub">${esc(s.currentSubsection)}</div></div>`;
-
-  document.getElementById('assignment').innerHTML = d.items.map((it) => {
-    // For revision items, show "Needs re-solve" or "Re-solved ✓" instead of the global status.
-    let statusChipHtml;
-    if (it.type === 'revision') {
-      if (it.completedToday) {
-        statusChipHtml = '<span class="status-chip s-re_solved"><span class="dot"></span>Re-solved ✓</span>';
-      } else {
-        statusChipHtml = '<span class="status-chip s-needs_resolve"><span class="dot"></span>Needs re-solve</span>';
-      }
-    } else {
-      statusChipHtml = `<span class="status-chip s-${it.status}"><span class="dot"></span>${STATUS_LABEL[it.status]}${(it.completionCount || 0) > 1 ? ` ×${it.completionCount}` : ''}</span>`;
-    }
-    return `
-    <div class="card">
-      <div class="card-top">
-        <span class="slot">#${it.slot}</span>
-        <span class="title">${esc(it.title)}</span>
-        <span class="badge ${it.type}">${it.type}</span>
-        <span class="diff">${esc(it.difficulty)}</span>
-        ${statusChipHtml}
-        ${it.revision ? '<span class="status-chip s-revision_needed">★ Revision</span>' : ''}
+  document.getElementById('assignment').innerHTML=d.items.map((it)=>{
+    const [stateClass,stateLabel]=stateFor(it),done=isItemDone(it);
+    return `<article class="problem-card ${done?'done':''}">
+      <div class="slot-box">${String(it.slot).padStart(2,'0')}</div>
+      <div class="problem-main">
+        <div class="problem-title-row"><span class="problem-title">${esc(it.title)}</span><span class="tag ${it.type}">${esc(it.type)}</span><span class="difficulty">${esc(it.difficulty)}</span></div>
+        <div class="problem-meta">${esc(it.step)} · ${esc(it.subsection)}</div>
+        <div class="problem-actions">${STATUS_BUTTONS.map((status)=>{const active=status==='revision_needed'?it.revision:(it.type==='revision'?it.completedToday&&it.status===status:it.status===status);const label=status==='revision_needed'?(it.revision?'Revision ✓':'Revise later'):STATUS_LABEL[status];return `<button class="status-btn ${active?'active':''}" data-id="${esc(it.id)}" data-status="${status}" data-revision="${it.revision?'1':'0'}">${label}</button>`}).join('')}</div>
+        <div class="problem-links">${it.url?`<a class="problem-link" href="${esc(it.url)}" target="_blank" rel="noopener">Problem ↗</a>`:''}${it.practiceUrl?`<a class="problem-link" href="${esc(it.practiceUrl)}" target="_blank" rel="noopener">Practice ↗</a>`:''}${it.youtubeUrl?`<a class="problem-link" href="${esc(it.youtubeUrl)}" target="_blank" rel="noopener">Video ↗</a>`:''}</div>
       </div>
-      <div class="meta">${esc(it.step)} › ${esc(it.subsection)}</div>
-      <div class="links">
-        ${it.url ? `<a href="${esc(it.url)}" target="_blank">Problem ↗</a>` : ''}
-        ${it.practiceUrl ? `<a href="${esc(it.practiceUrl)}" target="_blank">Practice ↗</a>` : ''}
-        ${it.youtubeUrl ? `<a href="${esc(it.youtubeUrl)}" target="_blank">Video ↗</a>` : ''}
-      </div>
-      <div class="statuses">
-        ${BUTTONS.map((b) => {
-          const active = b === 'revision_needed' ? it.revision : it.status === b;
-          const label = b === 'revision_needed' && it.revision ? 'Revision ✓' : STATUS_LABEL[b];
-          return `<button data-id="${esc(it.id)}" data-status="${b}" data-revision="${it.revision ? '1' : ''}" class="${active ? 'active' : ''}">${label}</button>`;
-        }).join('')}
-      </div>
-    </div>`;
-  }).join('') || '<div class="card">Nothing assigned — the sheet is complete! 🎉</div>';
+      <div class="card-side"><span class="state ${stateClass}"><span class="state-dot"></span>${stateLabel}</span><button class="hint-btn" data-hint-id="${esc(it.id)}">✦ Ask coach</button></div>
+    </article>`}).join('')||'<div class="empty-card">Your queue is clear. Enjoy the win.</div>';
 
-  document.getElementById('topics').innerHTML = d.topics.map((t) => `
-    <div class="topic">
-      <span class="name" title="${esc(t.step)}">${esc(t.step)}</span>
-      <div class="bar"><div style="width:${t.total?(t.done/t.total)*100:0}%"></div></div>
-      <span class="count">${t.done} / ${t.total}</span>
-    </div>`).join('');
-
-  document.getElementById('history').innerHTML = d.history.map((h) => `
-    <div class="hist-day">
-      <div class="hist-date">${new Date(h.date+'T00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}</div>
-      ${h.items.map((it) => `<div class="hist-item"><span class="status-chip s-${it.status}"><span class="dot"></span></span>${esc(it.title)} <span style="color:var(--muted)">· ${STATUS_LABEL[it.status]}${it.revision ? ' · ★ revision' : ''}</span></div>`).join('')}
-    </div>`).join('') || '<div style="color:var(--muted);font-size:12.5px">History will appear here after your first day.</div>';
-
-  const modeMap = { anthropic: 'Claude', gemini: 'Gemini', rules: 'Keywords' };
-  document.getElementById('chatModeBadge').textContent = modeMap[d.chatMode] || d.chatMode;
-  document.getElementById('chatHint').textContent =
-    d.chatMode === 'rules'
-      ? 'Keyword mode — "completed 1, couldn\'t solve 2". Add an API key in Settings for AI.'
-      : `AI mode (${modeMap[d.chatMode]}) — write naturally.`;
-
+  document.getElementById('topics').innerHTML=d.topics.map((t)=>`<div class="topic"><span class="topic-name" title="${esc(t.step)}">${esc(t.step)}</span><div class="bar"><div style="width:${t.total?(t.done/t.total)*100:0}%"></div></div><span class="topic-count">${t.done}/${t.total}</span></div>`).join('');
+  document.getElementById('history').innerHTML=d.history.map((day)=>`<div class="history-day"><div class="history-date">${new Date(day.date+'T00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}</div>${day.items.slice(0,5).map((it)=>`<div class="history-item">${esc(it.title)} · ${esc(STATUS_LABEL[it.status]||it.status)}</div>`).join('')}</div>`).join('')||'<div class="section-note">Your recent practice will appear here.</div>';
+  document.getElementById('chatModeBadge').textContent=MODE_NAME[d.chatMode]||d.chatMode;
+  document.getElementById('chatHint').textContent=d.chatMode==='rules'?'Add an AI key in Settings to unlock problem hints.':'Hints stay progressive—you control how much is revealed.';
   renderSettings(d);
-
-  document.querySelectorAll('.statuses button').forEach((btn) => {
-    btn.onclick = async () => {
-      const r = btn.dataset.status === 'revision_needed'
-        ? await api(`/api/problems/${btn.dataset.id}/revision`, {
-            method: 'POST', headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ revision: !btn.dataset.revision }),
-          })
-        : await api(`/api/problems/${btn.dataset.id}/status`, {
-            method: 'POST', headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ status: btn.dataset.status }),
-          });
-      render(r.dashboard);
-    };
-  });
+  bindRenderedActions();
 }
 
-function renderSettings(d) {
-  const panel = document.getElementById('settingsPanel');
-  if (panel.open && panel.dataset.populated) return;
-  panel.dataset.populated = '1';
-  const s = d.settings;
-  const steps = d.topics.map((t) => t.step);
-  document.getElementById('setCount').value = s.dailyCount;
-  document.getElementById('setProvider').value = s.provider;
-  const keyInput = document.getElementById('setApiKey');
-  if (document.activeElement !== keyInput) keyInput.value = s.apiKey;
-  document.getElementById('setModel').value = s.model || '';
-  const notionInput = document.getElementById('setNotionToken');
-  if (document.activeElement !== notionInput) notionInput.value = s.notionToken;
-  document.getElementById('setNotionPage').value = s.notionParentPageId || '';
-  const cur = document.getElementById('setCurrent');
-  cur.innerHTML = '<option value="">Follow sheet order</option>' +
-    steps.map((t) => `<option value="${esc(t)}" ${s.currentTopic===t?'selected':''}>${esc(t)}</option>`).join('');
-  const checks = (id, selected) => {
-    document.getElementById(id).innerHTML = steps.map((t) =>
-      `<label title="${esc(t)}"><input type="checkbox" value="${esc(t)}" ${selected.includes(t)?'checked':''}>${esc(t)}</label>`
-    ).join('');
-  };
-  checks('setPreferred', s.preferredTopics);
-  checks('setRevision', s.revisionTopics);
+function bindRenderedActions(){
+  document.querySelectorAll('.status-btn').forEach((btn)=>btn.onclick=async()=>{try{const path=btn.dataset.status==='revision_needed'?`/api/problems/${btn.dataset.id}/revision`:`/api/problems/${btn.dataset.id}/status`;const body=btn.dataset.status==='revision_needed'?{revision:btn.dataset.revision!=='1'}:{status:btn.dataset.status};const r=await api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});render(r.dashboard)}catch(e){alert(e.message)}});
+  document.querySelectorAll('[data-hint-id]').forEach((btn)=>btn.onclick=()=>startProblemHint(btn.dataset.hintId));
 }
 
-document.getElementById('saveSettings').onclick = async () => {
-  const checked = (id) => [...document.querySelectorAll(`#${id} input:checked`)].map((i) => i.value);
-  const r = await api('/api/settings', {
-    method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({
-      dailyCount: document.getElementById('setCount').value,
-      currentTopic: document.getElementById('setCurrent').value || null,
-      preferredTopics: checked('setPreferred'),
-      revisionTopics: checked('setRevision'),
-      provider: document.getElementById('setProvider').value,
-      apiKey: document.getElementById('setApiKey').value,
-      model: document.getElementById('setModel').value,
-      notionToken: document.getElementById('setNotionToken').value,
-      notionParentPageId: document.getElementById('setNotionPage').value,
-    }),
-  });
-  document.getElementById('settingsResult').textContent = '✓ Saved';
-  setTimeout(() => { document.getElementById('settingsResult').textContent = ''; }, 3000);
-  render(r.dashboard);
-};
-
-async function notionSync(scope, btn) {
-  const out = document.getElementById('notionResult');
-  btn.disabled = true; out.textContent = 'Syncing…';
-  try {
-    const res = await fetch('/api/notion/sync', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ scope, notionToken: document.getElementById('setNotionToken').value, notionParentPageId: document.getElementById('setNotionPage').value }),
-    });
-    const r = await res.json();
-    out.textContent = res.ok ? `✓ Synced ${r.synced} problem${r.synced===1?'':'s'} across ${r.days} day${r.days===1?'':'s'}` : `✗ ${r.error}`;
-  } catch (e) { out.textContent = '✗ ' + e.message; }
-  btn.disabled = false;
+function renderSettings(d){
+  const panel=document.getElementById('settingsPanel');if(panel.open&&panel.dataset.populated)return;panel.dataset.populated='1';const s=d.settings,steps=d.topics.map((t)=>t.step);
+  document.getElementById('setCount').value=s.dailyCount;document.getElementById('setProvider').value=s.provider;document.getElementById('setApiKey').value=s.apiKey;document.getElementById('setModel').value=s.model||'';document.getElementById('setNotionToken').value=s.notionToken;document.getElementById('setNotionPage').value=s.notionParentPageId||'';
+  document.getElementById('setCurrent').innerHTML='<option value="">Follow sheet order</option>'+steps.map((step)=>`<option value="${esc(step)}" ${s.currentTopic===step?'selected':''}>${esc(step)}</option>`).join('');
+  const checks=(id,selected)=>document.getElementById(id).innerHTML=steps.map((step)=>`<label title="${esc(step)}"><input type="checkbox" value="${esc(step)}" ${selected.includes(step)?'checked':''}>${esc(step)}</label>`).join('');checks('setPreferred',s.preferredTopics);checks('setRevision',s.revisionTopics);
 }
-document.getElementById('notionSyncToday').onclick = (e) => notionSync('today', e.target);
-document.getElementById('notionSyncAll').onclick = (e) => notionSync('all', e.target);
+const appShell=document.getElementById('appShell'),coachToggle=document.getElementById('coachToggle'),coachMessages=document.getElementById('chatMessages');
+function setCoachOpen(open){appShell.classList.toggle('coach-open',open);appShell.classList.toggle('coach-closed',!open);coachToggle.setAttribute('aria-expanded',String(open));try{localStorage.setItem('coachOpen',open?'1':'0')}catch{}if(open)setTimeout(()=>document.getElementById('chatInput').focus(),120)}
+coachToggle.onclick=()=>setCoachOpen(!appShell.classList.contains('coach-open'));document.getElementById('closeCoach').onclick=()=>setCoachOpen(false);document.getElementById('coachOverlay').onclick=()=>setCoachOpen(false);document.addEventListener('keydown',(e)=>{if(e.key==='Escape'&&appShell.classList.contains('coach-open'))setCoachOpen(false)});
+try{setCoachOpen(innerWidth>980&&localStorage.getItem('coachOpen')!=='0')}catch{setCoachOpen(innerWidth>980)}
 
-// --- Import progress ---
-document.getElementById('importBtn').onclick = () => document.getElementById('importFile').click();
-document.getElementById('importFile').addEventListener('change', async (e) => {
-  const out = document.getElementById('importResult');
-  const file = e.target.files[0];
-  e.target.value = '';
-  if (!file) return;
-  if (!confirm('Importing will overwrite your current progress, history and preferences with the file\'s contents. Continue?')) return;
-  out.textContent = '⏳ Importing…';
-  try {
-    const data = JSON.parse(await file.text());
-    const r = await api('/api/import', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    out.textContent = `✓ Restored ${r.restored} problems`;
-    render(r.dashboard);
-  } catch (err) {
-    out.textContent = '✗ ' + err.message;
-  }
-});
+function timeStr(){return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
+function appendMsg(role,text,updates=[],adds=[],removes=[],isError=false){
+  const el=document.createElement('div');el.className=`msg ${role}${isError?' error':''}`;
+  const meta=document.createElement('div');meta.className='msg-meta';meta.textContent=(role==='user'?'You':'Coach')+' · '+timeStr();
+  const bubble=document.createElement('div');bubble.className='msg-bubble';if(role==='assistant'&&!isError&&window.DsaMarkdown){bubble.innerHTML=window.DsaMarkdown.render(text)}else{bubble.textContent=text}
+  if(updates.length+adds.length+removes.length){const actions=document.createElement('div');actions.className='msg-update';actions.innerHTML=[...updates.map((u)=>`<div class="msg-update-item" style="color:${STATUS_COLOR[u.status]||'var(--text-2)'}">● ${esc(u.title)} → ${esc(STATUS_LABEL[u.status]||u.status)}</div>`),...adds.map((a)=>`<div class="msg-update-item" style="color:var(--green)">＋ ${esc(a.title)} added</div>`),...removes.map((r)=>`<div class="msg-update-item" style="color:var(--red)">− ${esc(r.title)} removed</div>`)].join('');bubble.appendChild(actions)}
+  el.append(meta,bubble);coachMessages.appendChild(el);coachMessages.scrollTop=coachMessages.scrollHeight;return el;
+}
+function showTyping(){const el=document.createElement('div');el.className='msg assistant typing';el.innerHTML=`<div class="msg-meta">Coach · thinking</div><div class="msg-bubble"><span class="bounce"></span><span class="bounce"></span><span class="bounce"></span></div>`;coachMessages.appendChild(el);coachMessages.scrollTop=coachMessages.scrollHeight;return el}
+function resetConversation(){chatHistory=[];coachMessages.innerHTML='<div class="msg assistant"><div class="msg-meta">Coach</div><div class="msg-bubble">Context ready. Start with a small hint, share your approach, or paste the part where you are stuck.</div></div>';saveCoachState()}
 
-// ── Chat panel ──────────────────────────────────────────────────
-const chatMessages = document.getElementById('chatMessages');
+async function ensureProblems(){
+  if(allProblems)return allProblems;allProblems=await api('/api/problems');problemById=Object.fromEntries(allProblems.map((p)=>[p.id,p]));problemLabelToId={};
+  const coachOptions=allProblems.map((p)=>{const label=`${p.title} — ${p.step} — #${p.id}`;problemLabelToId[label]=p.id;return `<option value="${esc(label)}"></option>`}).join('');document.getElementById('coachProblemList').innerHTML=coachOptions;
+  document.getElementById('problemList').innerHTML=allProblems.filter((p)=>p.status!=='completed'||p.revision).map((p)=>{const label=`${p.title} — #${p.id}`;problemLabelToId[label]=p.id;return `<option value="${esc(label)}">${esc(p.step)}</option>`}).join('');return allProblems;
+}
+function setHintLevel(level){hintLevel=Math.min(4,Math.max(1,Number(level)||1));document.querySelectorAll('.level-btn').forEach((btn)=>btn.classList.toggle('active',Number(btn.dataset.level)===hintLevel));saveCoachState()}
+async function selectCoachProblem(id,preserveConversation=false){
+  await ensureProblems();const next=id?problemById[String(id)]:null;if(id&&!next)throw new Error('Problem not found');const changed=selectedProblemId!==(next?.id||null);selectedProblemId=next?.id||null;
+  const input=document.getElementById('coachProblem');if(next){const label=Object.keys(problemLabelToId).find((key)=>problemLabelToId[key]===next.id&&key.includes(` — ${next.step} — `))||`${next.title} — ${next.step} — #${next.id}`;input.value=label;document.getElementById('selectedMeta').textContent=`${next.step} · ${next.subsection||'General'} · ${next.difficulty||'Unrated'}`}else{input.value='';document.getElementById('selectedMeta').textContent='General DSA conversation'}
+  if(changed&&!preserveConversation){setHintLevel(1);resetConversation()}else{saveCoachState()}
+}
+async function startProblemHint(id){try{setCoachOpen(true);await selectCoachProblem(id);await requestHint(1)}catch(e){appendMsg('assistant','✕ '+e.message,[],[],[],true)}}
+async function requestHint(level){if(!selectedProblemId){setCoachOpen(true);appendMsg('assistant','Choose a problem first so I know what to coach you on.',[],[],[],true);document.getElementById('coachProblem').focus();return}setHintLevel(level);const prompts={1:'Give me a first hint. Start with one Socratic question and do not reveal the algorithm.',2:'Give me the next hint: explain the core idea and invariant without implementation details.',3:'Show me the algorithm steps or pseudocode and one edge case, but no full code.',4:'Give me a detailed walkthrough with pseudocode, edge cases, and complexity. Do not give full code unless I ask.'};await sendChat(prompts[hintLevel])}
 
-function timeStr() {
-  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+async function sendChat(override){
+  if(chatBusy)return;const input=document.getElementById('chatInput'),button=document.getElementById('chatSendBtn');const message=String(override??input.value).trim();if(!message)return;
+  setCoachOpen(true);const priorHistory=chatHistory.slice(-8);appendMsg('user',message);input.value='';input.style.height='auto';chatBusy=true;button.disabled=true;const typing=showTyping();
+  try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,problemId:selectedProblemId,hintLevel,history:priorHistory})});typing.remove();const updates=r.updates||[],adds=r.adds||[],removes=r.removes||[];let reply=r.reply;if(!reply&&updates.length+adds.length+removes.length)reply='Done — your tracker is updated.';if(!reply)reply='I did not recognize an action. Ask a DSA question or try “completed 1”.';appendMsg('assistant',reply,updates,adds,removes);chatHistory.push({role:'user',content:message},{role:'assistant',content:reply});chatHistory=chatHistory.slice(-40);if(r.problem)selectedProblemId=r.problem.id;setHintLevel(r.hintLevel||hintLevel);saveCoachState();render(r.dashboard)}catch(e){typing.remove();appendMsg('assistant','✕ '+e.message,[],[],[],true)}finally{chatBusy=false;button.disabled=false;input.focus()}
 }
 
-function appendMsg(role, text, updates = [], adds = [], removes = [], isError = false) {
-  const div = document.createElement('div');
-  div.className = `msg ${role}${isError ? ' error' : ''}`;
+document.getElementById('coachProblem').addEventListener('focus',()=>ensureProblems().catch(()=>{}));document.getElementById('coachProblem').addEventListener('change',async(e)=>{await ensureProblems();const value=e.target.value.trim();const id=problemLabelToId[value]||(value.match(/#([^\s]+)$/)||[])[1];if(id)selectCoachProblem(id).catch((err)=>appendMsg('assistant',err.message,[],[],[],true))});
+document.getElementById('clearCoachProblem').onclick=()=>selectCoachProblem(null);document.querySelectorAll('.level-btn').forEach((btn)=>btn.onclick=()=>setHintLevel(btn.dataset.level));document.getElementById('getHint').onclick=()=>requestHint(hintLevel);document.getElementById('nextHint').onclick=()=>requestHint(Math.min(4,hintLevel+1));document.querySelectorAll('[data-prompt]').forEach((btn)=>btn.onclick=()=>sendChat(btn.dataset.prompt));document.getElementById('chatSendBtn').onclick=()=>sendChat();document.getElementById('chatInput').addEventListener('keydown',(e)=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat()}});document.getElementById('chatInput').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'});
+document.getElementById('addSearch').addEventListener('focus',()=>ensureProblems().catch(()=>{}));
+async function addToToday(problemId){const out=document.getElementById('addResult');out.textContent='Adding…';try{const r=await api('/api/assignment/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({problemId})});out.textContent=`Added “${r.added.title}”`;document.getElementById('addSearch').value='';render(r.dashboard)}catch(e){out.textContent='✕ '+e.message}}
+document.getElementById('addNext').onclick=()=>addToToday(null);document.getElementById('addPick').onclick=async()=>{await ensureProblems();const value=document.getElementById('addSearch').value.trim();if(!value){document.getElementById('addResult').textContent='Choose a problem first.';return}const id=problemLabelToId[value]||(value.match(/#([^\s]+)$/)||[])[1];if(!id){document.getElementById('addResult').textContent='Choose a suggestion from the list.';return}addToToday(id)};
 
-  const meta = document.createElement('div');
-  meta.className = 'msg-meta';
-  meta.textContent = (role === 'user' ? 'You' : 'Assistant') + ' · ' + timeStr();
+document.getElementById('saveSettings').onclick=async()=>{const checked=(id)=>[...document.querySelectorAll(`#${id} input:checked`)].map((input)=>input.value);const button=document.getElementById('saveSettings'),out=document.getElementById('settingsResult');button.disabled=true;out.textContent='Saving…';try{const r=await api('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dailyCount:document.getElementById('setCount').value,currentTopic:document.getElementById('setCurrent').value||null,preferredTopics:checked('setPreferred'),revisionTopics:checked('setRevision'),provider:document.getElementById('setProvider').value,apiKey:document.getElementById('setApiKey').value,model:document.getElementById('setModel').value,notionToken:document.getElementById('setNotionToken').value,notionParentPageId:document.getElementById('setNotionPage').value})});out.textContent='Saved';render(r.dashboard);setTimeout(()=>out.textContent='',2500)}catch(e){out.textContent='✕ '+e.message}finally{button.disabled=false}};
 
-  const bubble = document.createElement('div');
-  bubble.className = 'msg-bubble';
-  bubble.textContent = text;
+async function notionSync(scope,button){const out=document.getElementById('notionResult');button.disabled=true;out.textContent='Syncing…';try{const res=await fetch('/api/notion/sync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({scope,notionToken:document.getElementById('setNotionToken').value,notionParentPageId:document.getElementById('setNotionPage').value})});const r=await res.json();out.textContent=res.ok?`Synced ${r.synced} problem${r.synced===1?'':'s'}`:'✕ '+r.error}catch(e){out.textContent='✕ '+e.message}finally{button.disabled=false}}
+document.getElementById('notionSyncToday').onclick=(e)=>notionSync('today',e.currentTarget);document.getElementById('notionSyncAll').onclick=(e)=>notionSync('all',e.currentTarget);
 
-  const totalActions = updates.length + adds.length + removes.length;
-  if (totalActions > 0) {
-    const upd = document.createElement('div');
-    upd.className = 'msg-update';
-    upd.innerHTML = [
-      ...updates.map((u) =>
-        `<div class="msg-update-item"><span class="dot" style="background:${STATUS_COLOR[u.status]||'var(--grid)'}"></span><span>${esc(u.title)} → ${STATUS_LABEL[u.status]}</span></div>`
-      ),
-      ...adds.map((a) =>
-        `<div class="msg-update-item"><span style="color:var(--good);font-weight:700;font-size:13px;line-height:1">+</span><span style="color:var(--good)">${esc(a.title)} added</span></div>`
-      ),
-      ...removes.map((r) =>
-        `<div class="msg-update-item"><span style="color:var(--critical);font-weight:700;font-size:13px;line-height:1">−</span><span style="color:var(--ink-2)">${esc(r.title)} removed</span></div>`
-      ),
-    ].join('');
-    bubble.appendChild(upd);
-  }
+document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();document.getElementById('importFile').addEventListener('change',async(e)=>{const file=e.target.files[0],out=document.getElementById('importResult');e.target.value='';if(!file||!confirm('Importing will overwrite current progress, history, and preferences. Continue?'))return;out.textContent='Importing…';try{const data=JSON.parse(await file.text());const r=await api('/api/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});out.textContent=`Restored ${r.restored} problems`;allProblems=null;render(r.dashboard)}catch(err){out.textContent='✕ '+err.message}});
 
-  div.appendChild(meta);
-  div.appendChild(bubble);
-  chatMessages.appendChild(div);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-  return div;
-}
-
-function showTyping() {
-  const div = document.createElement('div');
-  div.className = 'msg assistant typing-indicator';
-  div.innerHTML = `<div class="msg-meta">Assistant · ${timeStr()}</div><div class="msg-bubble"><span class="dot-anim"></span><span class="dot-anim"></span><span class="dot-anim"></span></div>`;
-  chatMessages.appendChild(div);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-  return div;
-}
-
-const PARSER_NAME = { anthropic: 'Claude', gemini: 'Gemini', rules: 'keyword parser' };
-
-async function sendChat() {
-  const textarea = document.getElementById('chatInput');
-  const btn = document.getElementById('chatSendBtn');
-  const msg = textarea.value.trim();
-  if (!msg) return;
-
-  appendMsg('user', msg);
-  textarea.value = '';
-  textarea.style.height = 'auto';
-  btn.disabled = true;
-
-  const typing = showTyping();
-  try {
-    const r = await api('/api/chat', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ message: msg }),
-    });
-    typing.remove();
-
-    const adds    = r.adds    || [];
-    const removes = r.removes || [];
-    const updates = r.updates || [];
-    const total   = updates.length + adds.length + removes.length;
-    const via     = `via ${PARSER_NAME[r.mode] || r.mode}`;
-
-    let replyText;
-    if (r.reply) {
-      replyText = r.reply + `\n(${via})`;
-    } else if (total > 0) {
-      const parts = [];
-      if (updates.length) parts.push(`${updates.length} status update${updates.length>1?'s':''}`);
-      if (adds.length)    parts.push(`${adds.length} problem${adds.length>1?'s':''} added`);
-      if (removes.length) parts.push(`${removes.length} problem${removes.length>1?'s':''} removed`);
-      replyText = `Done — ${parts.join(', ')}.\n(${via})`;
-    } else {
-      replyText = `No actions recognized — try "completed 1", "add two sum", or "remove problem 3".\n(${via})`;
-    }
-
-    appendMsg('assistant', replyText, updates, adds, removes);
-    render(r.dashboard);
-  } catch (e) {
-    typing.remove();
-    appendMsg('assistant', '✗ ' + e.message, [], [], [], true);
-  }
-  btn.disabled = false;
-  textarea.focus();
-}
-
-document.getElementById('chatSendBtn').onclick = sendChat;
-document.getElementById('chatInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
-});
-document.getElementById('chatInput').addEventListener('input', function () {
-  this.style.height = 'auto';
-  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-});
-
-// ── Add a problem ──────────────────────────────────────────────
-let problemIndex = null;
-async function loadProblemList() {
-  if (problemIndex) return;
-  const problems = await api('/api/problems');
-  problemIndex = {};
-  document.getElementById('problemList').innerHTML = problems
-    .filter((p) => p.status !== 'completed' || p.revision) // unfinished + revision-flagged are addable
-    .map((p) => {
-      const label = `${p.title} — #${p.id}`;
-      problemIndex[label] = p.id;
-      return `<option value="${esc(label)}">${esc(p.step)}</option>`;
-    }).join('');
-}
-document.getElementById('addSearch').addEventListener('focus', () => loadProblemList().catch(() => {}));
-
-async function addToToday(problemId) {
-  const out = document.getElementById('addResult');
-  out.textContent = '⏳ Adding…';
-  try {
-    const r = await api('/api/assignment/add', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ problemId }),
-    });
-    out.textContent = `✓ Added "${r.added.title}"`;
-    document.getElementById('addSearch').value = '';
-    render(r.dashboard);
-  } catch (e) { out.textContent = '✗ ' + e.message; }
-}
-document.getElementById('addNext').onclick = () => addToToday(null);
-document.getElementById('addPick').onclick = async () => {
-  await loadProblemList().catch(() => {});
-  const val = document.getElementById('addSearch').value.trim();
-  if (!val) { document.getElementById('addResult').textContent = 'Type or pick a problem first.'; return; }
-  const id = problemIndex[val] || (val.match(/#(\d+)\s*$/) || [])[1];
-  if (!id) { document.getElementById('addResult').textContent = 'Pick a problem from the suggestions.'; return; }
-  addToToday(id);
-};
-
-api('/api/dashboard').then(render).catch((e) => {
-  document.getElementById('assignment').textContent = 'Failed to load: ' + e.message;
-});
+ensureProblems().then(restoreCoachState).catch(()=>{});api('/api/dashboard').then(render).catch((e)=>{document.getElementById('assignment').innerHTML=`<div class="empty-card">Failed to load: ${esc(e.message)}</div>`});
 </script>
 </body>
 </html>

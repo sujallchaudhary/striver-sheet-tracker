@@ -14,7 +14,7 @@ router.post('/problems/:id/status', (req, res) => {
   res.json({ ok: true, dashboard: buildDashboard() });
 });
 
-// Toggle the revision flag. Flagging ON marks the problem completed if it wasn't.
+// Toggle the revision flag independently from completion status.
 router.post('/problems/:id/revision', (req, res) => {
   const p = setRevision(req.params.id, Boolean(req.body.revision), todayStr());
   if (!p) return res.status(400).json({ error: 'unknown problem' });
@@ -27,7 +27,8 @@ router.post('/problems/:id/revision', (req, res) => {
 // Lightweight list for the add-problem search box.
 router.get('/problems', (req, res) => {
   res.json(getDb().problems.map((p) => ({
-    id: p.id, title: p.title, step: p.step, status: p.status,
+    id: p.id, title: p.title, step: p.step, subsection: p.subsection,
+    difficulty: p.difficulty, status: p.status,
     revision: p.revision, everCompleted: p.everCompleted, completionCount: p.completionCount,
   })));
 });

@@ -258,6 +258,20 @@
     .band-diffs { gap: 14px; }
   }
 </style>
+<style>
+/* Match the dashboard's black glass visual system. */
+:root{color-scheme:dark;--bg:#020203;--surface:rgba(13,13,17,.7);--surface-2:rgba(255,255,255,.045);--surface-3:rgba(255,255,255,.075);--ink:#f7f7fa;--ink-2:#b0b0bd;--muted:#70717e;--border:rgba(255,255,255,.085);--border-2:rgba(255,255,255,.045);--accent:#8b7cff;--accent-dim:rgba(139,124,255,.14);--track:rgba(255,255,255,.075)}
+body{background:radial-gradient(circle at 10% 0,rgba(95,76,220,.11),transparent 31rem),radial-gradient(circle at 85% 65%,rgba(24,113,129,.06),transparent 35rem),#020203;background-attachment:fixed}
+.topbar,.filter-bar{background:rgba(4,4,7,.72);border-color:rgba(255,255,255,.07);-webkit-backdrop-filter:blur(24px) saturate(130%);backdrop-filter:blur(24px) saturate(130%)}
+.progress-band{background:linear-gradient(135deg,rgba(20,19,29,.76),rgba(7,7,10,.62));border-bottom:1px solid rgba(255,255,255,.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 18px 48px rgba(0,0,0,.25);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px)}
+.ring-inner{background:#08080b}.ring-track{stroke:rgba(255,255,255,.09)}
+.nav-link,.expand-btn,.filter-bar input[type="search"],.filter-bar select{background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.085);box-shadow:inset 0 1px 0 rgba(255,255,255,.025);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.table-card{background:linear-gradient(145deg,rgba(20,20,25,.7),rgba(8,8,11,.56));border-color:rgba(255,255,255,.09);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 22px 55px rgba(0,0,0,.26);-webkit-backdrop-filter:blur(22px) saturate(125%);backdrop-filter:blur(22px) saturate(125%)}
+.step-header:hover,.sub-header:hover,tbody tr:hover{background:rgba(255,255,255,.028)}.prog-fill{background:linear-gradient(90deg,#8b7cff,#4de3df);box-shadow:0 0 16px rgba(77,227,223,.14)}
+.status-btn.done{background:var(--accent);box-shadow:0 0 16px rgba(139,124,255,.2)}
+::selection{background:rgba(139,124,255,.38);color:#fff}.sheet-wrap::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1)}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}}
+</style>
 </head>
 <body>
 
