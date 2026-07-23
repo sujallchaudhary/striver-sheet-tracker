@@ -6,10 +6,10 @@ const router = Router();
 
 router.get('/export', (req, res) => {
   const db = getDb();
-  const { apiKey, notionToken, ...safeSettings } = db.settings; // never export secrets
+  const { apiKey, notionToken, youtubeApiKey, ...safeSettings } = db.settings; // never export secrets
   const payload = {
     app: 'dsa-tracker',
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     problems: db.problems.map((p) => ({
       id: p.id, status: p.status, revision: p.revision, revisionFlaggedAt: p.revisionFlaggedAt,
@@ -18,6 +18,9 @@ router.get('/export', (req, res) => {
       timesAssigned: p.timesAssigned, lastAssignedDate: p.lastAssignedDate,
     })),
     assignments: db.assignments,
+    videoAssignments: db.videoAssignments,
+    playlists: db.playlists,
+    videoProgress: db.videoProgress,
     activity: db.activity,
     settings: safeSettings,
   };
@@ -52,10 +55,13 @@ router.post('/import', (req, res) => {
     restored++;
   }
   if (b.assignments && typeof b.assignments === 'object') db.assignments = b.assignments;
+  if (b.videoAssignments && typeof b.videoAssignments === 'object') db.videoAssignments = b.videoAssignments;
+  if (Array.isArray(b.playlists)) db.playlists = b.playlists;
+  if (b.videoProgress && typeof b.videoProgress === 'object') db.videoProgress = b.videoProgress;
   if (b.activity && typeof b.activity === 'object') db.activity = b.activity;
   if (b.settings && typeof b.settings === 'object') {
     // Keep local secrets; take everything else from the import.
-    const { apiKey, notionToken, ...incoming } = b.settings;
+    const { apiKey, notionToken, youtubeApiKey, ...incoming } = b.settings;
     db.settings = { ...db.settings, ...incoming };
   }
   saveDb();

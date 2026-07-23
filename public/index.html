@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark">
 <title>DSA Studio</title>
+<script src="/auth.js"></script>
 <style>
 :root {
   color-scheme:dark;
@@ -31,6 +32,7 @@ button,input,select,textarea{font:inherit} button{color:inherit} a{color:inherit
 .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}.stat{padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:color-mix(in srgb,var(--surface-2) 76%,transparent)}.stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.stat-value{font-size:20px;font-weight:800;margin-top:2px}.stat-value small{font-size:11px;font-weight:600;color:var(--muted)}
 .section-head{display:flex;align-items:end;justify-content:space-between;gap:18px;margin:34px 0 13px}.section-head h2{margin:3px 0 0;font-size:21px;letter-spacing:-.035em}.section-note{color:var(--muted);font-size:12px}.assignment-list{display:grid;gap:10px}
 .problem-card{position:relative;display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:15px;align-items:start;padding:18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);transition:.18s ease}.problem-card:hover{border-color:color-mix(in srgb,var(--primary) 45%,var(--line));transform:translateY(-1px);box-shadow:0 12px 30px rgba(0,0,0,.09)}.problem-card.done{opacity:.78}.slot-box{width:44px;height:44px;border-radius:13px;background:var(--surface-2);display:grid;place-items:center;color:var(--muted);font-weight:800}.problem-main{min-width:0}.problem-title-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.problem-title{font-size:15px;font-weight:750;letter-spacing:-.015em}.tag{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;padding:3px 7px;border-radius:99px;background:var(--surface-3);color:var(--text-2)}.tag.revision{background:var(--primary-soft);color:var(--primary-2)}.difficulty{font-size:10px;color:var(--muted)}.problem-meta{font-size:11px;color:var(--muted);margin:4px 0 11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.problem-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.status-btn{border:1px solid var(--line);background:transparent;border-radius:9px;padding:6px 9px;font-size:10.5px;color:var(--text-2);cursor:pointer}.status-btn:hover{border-color:var(--muted);color:var(--text)}.status-btn.active{background:var(--text);border-color:var(--text);color:var(--bg)}.problem-links{display:flex;gap:6px;margin-top:9px}.problem-link{font-size:10.5px;color:var(--primary-2);text-decoration:none}.problem-link:hover{text-decoration:underline}.card-side{display:flex;flex-direction:column;align-items:flex-end;gap:9px}.state{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;color:var(--text-2)}.state-dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}.state.completed,.state.re_solved{color:var(--green)}.state.completed .state-dot,.state.re_solved .state-dot{background:var(--green)}.state.attempted{color:var(--orange)}.state.attempted .state-dot{background:var(--orange)}.state.needs_resolve{color:var(--amber)}.state.needs_resolve .state-dot{background:var(--amber)}
+.video-thumb{width:74px;height:42px;object-fit:cover;border-radius:8px;border:1px solid var(--line);margin-top:10px}
 .hint-btn{border:1px solid color-mix(in srgb,var(--primary) 38%,var(--line));background:var(--primary-soft);color:var(--primary-2);border-radius:10px;padding:7px 10px;font-size:11px;font-weight:750;cursor:pointer;white-space:nowrap}.hint-btn:hover{background:var(--primary);color:#fff}.empty-card{padding:32px;text-align:center;border:1px dashed var(--line);border-radius:var(--radius);color:var(--muted)}
 .add-bar{display:flex;gap:8px;align-items:center;margin-top:12px;padding:11px;border:1px dashed var(--line);border-radius:14px}.field{width:100%;border:1px solid var(--line);background:var(--surface-2);color:var(--text);border-radius:10px;padding:9px 11px;outline:none}.field:focus{border-color:var(--primary)}.add-bar .field{flex:1}.inline-result{font-size:11px;color:var(--text-2)}
 .lower-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:16px;margin-top:34px}.panel{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:19px}.panel-title{font-size:13px;font-weight:800;margin-bottom:14px}.topic{display:grid;grid-template-columns:minmax(120px,1fr) minmax(90px,1.3fr) 48px;gap:10px;align-items:center;padding:6px 0}.topic-name{font-size:11px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bar{height:6px;background:var(--surface-3);border-radius:99px;overflow:hidden}.bar>div{height:100%;background:linear-gradient(90deg,var(--primary),var(--cyan));border-radius:inherit}.topic-count{text-align:right;font-size:10px;color:var(--muted)}.history-day+ .history-day{margin-top:13px;padding-top:13px;border-top:1px solid var(--line)}.history-date{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}.history-item{font-size:11px;color:var(--text-2);padding:3px 0;display:flex;gap:6px}.history-item:before{content:"";width:5px;height:5px;border-radius:50%;background:var(--line);margin-top:6px;flex:none}
@@ -113,6 +115,23 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
       </div>
     </section>
 
+    <section aria-labelledby="videoAssignmentTitle">
+      <div class="section-head">
+        <div><div class="section-kicker">Watch queue</div><h2 id="videoAssignmentTitle">Today's videos</h2></div>
+        <div class="section-note" id="videoAssignmentNote"></div>
+      </div>
+      <div class="assignment-list" id="videoAssignment"></div>
+      <div class="add-bar" id="playlistAddBar">
+        <input class="field" id="playlistTitle" placeholder="Playlist name (optional)">
+        <input class="field" id="playlistUrl" placeholder="YouTube playlist URL">
+        <input class="field" id="playlistTotal" type="number" min="1" max="10000" placeholder="Videos (without API key)">
+        <input class="field" id="playlistDays" type="number" min="1" max="3650" placeholder="Finish in days">
+        <button class="mini-btn" type="button" id="addPlaylist">Add playlist</button>
+        <span class="inline-result" id="playlistResult"></span>
+      </div>
+      <div class="assignment-list" id="playlistManager" style="margin-top:10px"></div>
+    </section>
+
     <div class="lower-grid">
       <section class="panel"><div class="panel-title">Topic momentum</div><div id="topics"></div></section>
       <section class="panel"><div class="panel-title">Recent practice</div><div id="history"></div></section>
@@ -122,9 +141,12 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
       <summary>Workspace settings</summary>
       <div class="settings-body"><div class="settings-grid">
         <div class="setting-row"><label>Problems per day</label><input type="number" id="setCount" min="3" max="8"></div>
+        <div class="setting-row"><label>Videos per day</label><input type="number" id="setVideoCount" min="1" max="20"></div>
         <div class="setting-row"><label>Current topic <span class="hint">— first priority</span></label><select id="setCurrent"><option value="">Follow sheet order</option></select></div>
         <div class="setting-row full"><label>Preferred topics</label><div class="topic-checks" id="setPreferred"></div></div>
         <div class="setting-row full"><label>Topics to revise <span class="hint">— automatic questions repeat no sooner than 30 days</span></label><div class="topic-checks" id="setRevision"></div></div>
+        <div class="setting-row full"><label>Playlists for the daily video queue <span class="hint">— rotate through selected playlists</span></label><div class="topic-checks" id="setPlaylists"></div></div>
+        <div class="setting-row full"><label>YouTube Data API key <span class="hint">— imports real video titles, thumbnails, and the exact playlist length</span></label><input type="password" id="setYoutubeApiKey" placeholder="YouTube Data API v3 key"></div>
         <div class="setting-row full"><label>AI coach provider <span class="hint">— required for hints; tracker commands have a keyword fallback</span></label>
           <select id="setProvider"><option value="auto">Auto — use available key</option><option value="anthropic">Claude (Anthropic)</option><option value="gemini">Gemini</option><option value="none">Off — keywords only</option></select>
           <input type="password" id="setApiKey" placeholder="API key, or use an environment variable" style="margin-top:7px">
@@ -211,6 +233,20 @@ function render(d){
       <div class="card-side"><span class="state ${stateClass}"><span class="state-dot"></span>${stateLabel}</span><button class="hint-btn" data-hint-id="${esc(it.id)}">✦ Ask coach</button></div>
     </article>`}).join('')||'<div class="empty-card">Your queue is clear. Enjoy the win.</div>';
 
+  const videoDone=s.todayVideosDone||0,videoTotal=s.todayVideosTotal||0;
+  document.getElementById('videoAssignmentNote').textContent=videoTotal?`${videoDone} of ${videoTotal} watched`:'Add a playlist to start your watch queue';
+  document.getElementById('videoAssignment').innerHTML=d.videoItems.map((it)=>`<article class="problem-card ${it.completed?'done':''}">
+    <div class="slot-box">▶</div>
+    <div class="problem-main">
+      <div class="problem-title-row"><span class="problem-title">${esc(it.videoTitle)}</span><span class="tag ${esc(it.type)}">${esc(it.type)}</span><span class="tag">video ${it.position}</span></div>
+      <div class="problem-meta">${esc(it.playlistTitle)} · ${it.status==='attempted'?'Continue where you stopped':it.revision?'Scheduled revision':'New lesson'}</div>
+      <div class="problem-links"><a class="problem-link" href="${esc(it.url)}" target="_blank" rel="noopener">Watch on YouTube ↗</a></div>
+      ${it.thumbnail?`<img class="video-thumb" src="${esc(it.thumbnail)}" alt="">`:''}
+    </div>
+    <div class="card-side"><div class="problem-actions"><button class="status-btn ${it.status==='completed'?'active':''}" data-video-index="${it.slot-1}" data-video-status="completed">Watched ✓</button><button class="status-btn ${it.status==='attempted'?'active':''}" data-video-index="${it.slot-1}" data-video-status="attempted">Continue later</button><button class="status-btn ${it.revision?'active':''}" data-video-index="${it.slot-1}" data-video-revision="${it.revision?'1':'0'}">${it.revision?'Revision ✓':'Revise later'}</button></div></div>
+  </article>`).join('')||'<div class="empty-card">No playlists yet. Add one below, then choose how many videos to watch each day in Settings.</div>';
+  document.getElementById('playlistManager').innerHTML=d.playlists.map((playlist)=>`<div class="history-day"><div><strong>${esc(playlist.title)}</strong> <span class="section-note">${playlist.totalVideos} videos · ${playlist.targetDays}-day target</span></div><div class="problem-links"><a class="problem-link" href="${esc(playlist.url)}" target="_blank" rel="noopener">Open playlist ↗</a><button class="status-btn" data-remove-playlist="${esc(playlist.id)}">Delete playlist</button></div></div>`).join('');
+
   document.getElementById('topics').innerHTML=d.topics.map((t)=>`<div class="topic"><span class="topic-name" title="${esc(t.step)}">${esc(t.step)}</span><div class="bar"><div style="width:${t.total?(t.done/t.total)*100:0}%"></div></div><span class="topic-count">${t.done}/${t.total}</span></div>`).join('');
   document.getElementById('history').innerHTML=d.history.map((day)=>`<div class="history-day"><div class="history-date">${new Date(day.date+'T00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}</div>${day.items.slice(0,5).map((it)=>`<div class="history-item">${esc(it.title)} · ${esc(STATUS_LABEL[it.status]||it.status)}</div>`).join('')}</div>`).join('')||'<div class="section-note">Your recent practice will appear here.</div>';
   document.getElementById('chatModeBadge').textContent=MODE_NAME[d.chatMode]||d.chatMode;
@@ -220,16 +256,21 @@ function render(d){
 }
 
 function bindRenderedActions(){
-  document.querySelectorAll('.status-btn').forEach((btn)=>btn.onclick=async()=>{try{const path=btn.dataset.status==='revision_needed'?`/api/problems/${btn.dataset.id}/revision`:`/api/problems/${btn.dataset.id}/status`;const body=btn.dataset.status==='revision_needed'?{revision:btn.dataset.revision!=='1'}:{status:btn.dataset.status};const r=await api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});render(r.dashboard)}catch(e){alert(e.message)}});
+  document.querySelectorAll('.status-btn[data-status]').forEach((btn)=>btn.onclick=async()=>{try{const path=btn.dataset.status==='revision_needed'?`/api/problems/${btn.dataset.id}/revision`:`/api/problems/${btn.dataset.id}/status`;const body=btn.dataset.status==='revision_needed'?{revision:btn.dataset.revision!=='1'}:{status:btn.dataset.status};const r=await api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});render(r.dashboard)}catch(e){alert(e.message)}});
   document.querySelectorAll('[data-hint-id]').forEach((btn)=>btn.onclick=()=>startProblemHint(btn.dataset.hintId));
+  document.querySelectorAll('[data-video-index]').forEach((btn)=>btn.onclick=async()=>{try{const body=btn.dataset.videoStatus?{status:btn.dataset.videoStatus}:{revision:btn.dataset.videoRevision!=='1'};const r=await api(`/api/video-assignment/${btn.dataset.videoIndex}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});render(r.dashboard)}catch(e){alert(e.message)}});
 }
 
 function renderSettings(d){
   const panel=document.getElementById('settingsPanel');if(panel.open&&panel.dataset.populated)return;panel.dataset.populated='1';const s=d.settings,steps=d.topics.map((t)=>t.step);
-  document.getElementById('setCount').value=s.dailyCount;document.getElementById('setProvider').value=s.provider;document.getElementById('setApiKey').value=s.apiKey;document.getElementById('setModel').value=s.model||'';document.getElementById('setNotionToken').value=s.notionToken;document.getElementById('setNotionPage').value=s.notionParentPageId||'';
+  document.getElementById('setCount').value=s.dailyCount;document.getElementById('setVideoCount').value=s.videoDailyCount;document.getElementById('setProvider').value=s.provider;document.getElementById('setApiKey').value=s.apiKey;document.getElementById('setYoutubeApiKey').value=s.youtubeApiKey;document.getElementById('setModel').value=s.model||'';document.getElementById('setNotionToken').value=s.notionToken;document.getElementById('setNotionPage').value=s.notionParentPageId||'';
   document.getElementById('setCurrent').innerHTML='<option value="">Follow sheet order</option>'+steps.map((step)=>`<option value="${esc(step)}" ${s.currentTopic===step?'selected':''}>${esc(step)}</option>`).join('');
   const checks=(id,selected)=>document.getElementById(id).innerHTML=steps.map((step)=>`<label title="${esc(step)}"><input type="checkbox" value="${esc(step)}" ${selected.includes(step)?'checked':''}>${esc(step)}</label>`).join('');checks('setPreferred',s.preferredTopics);checks('setRevision',s.revisionTopics);
+  document.getElementById('setPlaylists').innerHTML=d.playlists.length?d.playlists.map((playlist)=>`<label title="${esc(playlist.title)}"><input type="checkbox" value="${esc(playlist.id)}" ${s.preferredPlaylistIds.includes(playlist.id)?'checked':''}>${esc(playlist.title)} <span class="hint">(${playlist.totalVideos} videos · ${playlist.targetDays} day target${playlist.metadataSynced?' · synced':''})</span><button class="mini-btn" type="button" data-sync-playlist="${esc(playlist.id)}">Sync details</button><button class="mini-btn" type="button" data-remove-playlist="${esc(playlist.id)}">Remove</button></label>`).join(''):'<span class="hint">Add a playlist above to select it here.</span>';
+  document.querySelectorAll('[data-sync-playlist]').forEach((btn)=>btn.onclick=async(e)=>{e.preventDefault();e.stopPropagation();try{btn.disabled=true;const r=await api(`/api/playlists/${btn.dataset.syncPlaylist}/sync`,{method:'POST'});delete document.getElementById('settingsPanel').dataset.populated;render(r.dashboard)}catch(err){alert(err.message)}finally{btn.disabled=false}});
+  document.querySelectorAll('[data-remove-playlist]').forEach((btn)=>btn.onclick=removePlaylist);
 }
+async function removePlaylist(event){event.preventDefault();event.stopPropagation();const btn=event.currentTarget;if(!confirm('Delete this playlist and its video progress? This cannot be undone.'))return;try{const r=await api(`/api/playlists/${btn.dataset.removePlaylist}`,{method:'DELETE'});delete document.getElementById('settingsPanel').dataset.populated;render(r.dashboard)}catch(err){alert(err.message)}}
 const appShell=document.getElementById('appShell'),coachToggle=document.getElementById('coachToggle'),coachMessages=document.getElementById('chatMessages');
 function setCoachOpen(open){appShell.classList.toggle('coach-open',open);appShell.classList.toggle('coach-closed',!open);coachToggle.setAttribute('aria-expanded',String(open));try{localStorage.setItem('coachOpen',open?'1':'0')}catch{}if(open)setTimeout(()=>document.getElementById('chatInput').focus(),120)}
 coachToggle.onclick=()=>setCoachOpen(!appShell.classList.contains('coach-open'));document.getElementById('closeCoach').onclick=()=>setCoachOpen(false);document.getElementById('coachOverlay').onclick=()=>setCoachOpen(false);document.addEventListener('keydown',(e)=>{if(e.key==='Escape'&&appShell.classList.contains('coach-open'))setCoachOpen(false)});
@@ -272,13 +313,15 @@ document.getElementById('addSearch').addEventListener('focus',()=>ensureProblems
 async function addToToday(problemId){const out=document.getElementById('addResult');out.textContent='Adding…';try{const r=await api('/api/assignment/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({problemId})});out.textContent=`Added “${r.added.title}”`;document.getElementById('addSearch').value='';render(r.dashboard)}catch(e){out.textContent='✕ '+e.message}}
 document.getElementById('addNext').onclick=()=>addToToday(null);document.getElementById('addPick').onclick=async()=>{await ensureProblems();const value=document.getElementById('addSearch').value.trim();if(!value){document.getElementById('addResult').textContent='Choose a problem first.';return}const id=problemLabelToId[value]||(value.match(/#([^\s]+)$/)||[])[1];if(!id){document.getElementById('addResult').textContent='Choose a suggestion from the list.';return}addToToday(id)};
 
+document.getElementById('addPlaylist').onclick=async()=>{const out=document.getElementById('playlistResult');out.textContent='Adding…';try{const r=await api('/api/playlists',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:document.getElementById('playlistTitle').value,url:document.getElementById('playlistUrl').value,totalVideos:document.getElementById('playlistTotal').value,targetDays:document.getElementById('playlistDays').value})});document.getElementById('playlistTitle').value='';document.getElementById('playlistUrl').value='';document.getElementById('playlistTotal').value='';document.getElementById('playlistDays').value='';out.textContent='Playlist added';delete document.getElementById('settingsPanel').dataset.populated;render(r.dashboard)}catch(e){out.textContent='✕ '+e.message}};
+
 let settingsSaveTimer=null,settingsResultTimer=null;
-function collectSettings(){const checked=(id)=>[...document.querySelectorAll(`#${id} input:checked`)].map((input)=>input.value);return{dailyCount:document.getElementById('setCount').value,currentTopic:document.getElementById('setCurrent').value||null,preferredTopics:checked('setPreferred'),revisionTopics:checked('setRevision'),provider:document.getElementById('setProvider').value,apiKey:document.getElementById('setApiKey').value,model:document.getElementById('setModel').value,notionToken:document.getElementById('setNotionToken').value,notionParentPageId:document.getElementById('setNotionPage').value}}
+function collectSettings(){const checked=(id)=>[...document.querySelectorAll(`#${id} input:checked`)].map((input)=>input.value);return{dailyCount:document.getElementById('setCount').value,videoDailyCount:document.getElementById('setVideoCount').value,currentTopic:document.getElementById('setCurrent').value||null,preferredTopics:checked('setPreferred'),revisionTopics:checked('setRevision'),preferredPlaylistIds:checked('setPlaylists'),provider:document.getElementById('setProvider').value,apiKey:document.getElementById('setApiKey').value,youtubeApiKey:document.getElementById('setYoutubeApiKey').value,model:document.getElementById('setModel').value,notionToken:document.getElementById('setNotionToken').value,notionParentPageId:document.getElementById('setNotionPage').value}}
 async function persistSettings(){const out=document.getElementById('settingsResult');clearTimeout(settingsResultTimer);out.textContent='Saving…';try{const r=await api('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(collectSettings())});out.textContent=r.regenerated?'✓ Saved · today\u2019s list regenerated':'✓ Saved';render(r.dashboard);settingsResultTimer=setTimeout(()=>{out.textContent='Changes save automatically'},2200)}catch(e){out.textContent='✕ '+e.message}}
 function scheduleSettingsSave(immediate){clearTimeout(settingsSaveTimer);if(immediate){persistSettings();return}settingsSaveTimer=setTimeout(persistSettings,600)}
 const settingsPanel=document.getElementById('settingsPanel');
-settingsPanel.addEventListener('change',(e)=>{if(e.target.type==='file'||e.target.closest('.settings-actions'))return;scheduleSettingsSave(e.target.matches('input[type="checkbox"],select,#setCount'))});
-settingsPanel.addEventListener('input',(e)=>{if(e.target.matches('#setApiKey,#setModel'))scheduleSettingsSave(false)});
+settingsPanel.addEventListener('change',(e)=>{if(e.target.type==='file'||e.target.closest('.settings-actions')||e.target.closest('[data-remove-playlist]'))return;scheduleSettingsSave(e.target.matches('input[type="checkbox"],select,#setCount,#setVideoCount'))});
+settingsPanel.addEventListener('input',(e)=>{if(e.target.matches('#setApiKey,#setYoutubeApiKey,#setModel'))scheduleSettingsSave(false)});
 
 async function notionSync(scope,button){const out=document.getElementById('notionResult');button.disabled=true;out.textContent='Syncing…';try{const res=await fetch('/api/notion/sync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({scope,notionToken:document.getElementById('setNotionToken').value,notionParentPageId:document.getElementById('setNotionPage').value})});const r=await res.json();out.textContent=res.ok?`Synced ${r.synced} problem${r.synced===1?'':'s'}`:'✕ '+r.error}catch(e){out.textContent='✕ '+e.message}finally{button.disabled=false}}
 document.getElementById('notionSyncToday').onclick=(e)=>notionSync('today',e.currentTarget);document.getElementById('notionSyncAll').onclick=(e)=>notionSync('all',e.currentTarget);
