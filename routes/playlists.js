@@ -17,6 +17,17 @@ router.post('/playlists/:id/sync', async (req, res) => {
   res.json({ ok: true, playlist: result.playlist, dashboard: buildDashboard() });
 });
 
+router.post('/video-assignment/add', (req, res) => {
+  const result = videos.addVideoToDay(todayStr(), req.body?.playlistId);
+  if (result.error) return res.status(400).json({ error: result.error });
+  res.json({ ok: true, added: result.added, dashboard: buildDashboard() });
+});
+
+router.post('/video-assignment/regenerate', (req, res) => {
+  videos.regenerateVideoAssignment(todayStr());
+  res.json({ ok: true, dashboard: buildDashboard() });
+});
+
 router.delete('/playlists/:id', (req, res) => {
   const playlist = videos.removePlaylist(req.params.id);
   if (!playlist) return res.status(404).json({ error: 'playlist not found' });
