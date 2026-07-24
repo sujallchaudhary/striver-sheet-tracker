@@ -38,6 +38,7 @@ router.post('/video-progress', (req, res) => {
 
 router.get('/playlists/progress', (req, res) => {
   const db = getDb();
+  const todayItems = new Set((db.videoAssignments[todayStr()]?.items || []).map((item) => `${item.playlistId}:${item.position}`));
   const playlists = db.playlists.map((playlist) => {
     const videosList = Array.from({ length: playlist.totalVideos }, (_, offset) => {
       const position = offset + 1;
@@ -46,6 +47,7 @@ router.get('/playlists/progress', (req, res) => {
         position, title: playlist.videos?.[offset]?.title || `Video ${position}`,
         thumbnail: playlist.videos?.[offset]?.thumbnail || '', videoId: playlist.videos?.[offset]?.videoId || '',
         status: progress.status, revision: progress.revision, timesAssigned: progress.timesAssigned, lastAssignedDate: progress.lastAssignedDate,
+        inTodayPlan: todayItems.has(`${playlist.id}:${position}`),
       };
     });
     return { id: playlist.id, title: playlist.title, url: playlist.url, targetDays: playlist.targetDays, totalVideos: playlist.totalVideos, done: videosList.filter((video) => video.status === 'completed').length, videos: videosList };

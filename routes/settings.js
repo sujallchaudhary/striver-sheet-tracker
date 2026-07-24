@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const { getDb, saveDb, todayStr } = require('../lib/store');
 const { buildDashboard } = require('../lib/dashboard');
+const { releaseVideoAssignment } = require('../lib/videos');
 
 const router = Router();
 
@@ -64,7 +65,7 @@ router.post('/settings', (req, res) => {
   const videoRegenerated = videoAssignmentKeyAfter !== videoAssignmentKeyBefore;
   const regenerated = problemRegenerated || videoRegenerated;
   if (problemRegenerated) delete db.assignments[todayStr()];
-  if (videoRegenerated) delete db.videoAssignments[todayStr()];
+  if (videoRegenerated) releaseVideoAssignment(todayStr());
 
   saveDb();
   res.json({ ok: true, regenerated, dashboard: buildDashboard() });
