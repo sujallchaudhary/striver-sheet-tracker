@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="dark">
 <title>DSA Coach — DSA Studio</title>
-<script src="/auth.js"></script>
+<script src="/auth.js?v=2"></script>
 <style>
 :root{color-scheme:dark;--bg:#020203;--glass:rgba(13,13,18,.7);--glass-2:rgba(255,255,255,.045);--glass-3:rgba(255,255,255,.075);--text:#f7f7fa;--text-2:#b0b0bd;--muted:#70717e;--line:rgba(255,255,255,.085);--primary:#8b7cff;--primary-2:#b2a9ff;--green:#45dfa0;--orange:#ff8b61;--red:#ff6680;--shadow:0 28px 90px rgba(0,0,0,.58)}
 *{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden}body{color:var(--text);font:14px/1.5 Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at 8% 0,rgba(95,76,220,.13),transparent 32rem),radial-gradient(circle at 90% 70%,rgba(24,113,129,.07),transparent 37rem),#020203}
@@ -61,7 +61,7 @@ const STATUS_LABEL={pending:'Pending',attempted:'Attempted',completed:'Completed
 let problems=[],problemById={},labelToId={},selectedProblemId=null,hintLevel=1,history=[],busy=false;
 const messages=document.getElementById('messages'),workspace=document.getElementById('workspace');
 
-async function api(path,options){const response=await fetch(path,options);if(!response.ok){const text=await response.text();let message=text;try{message=JSON.parse(text).error||text}catch{}throw new Error(message)}return response.json()}
+async function api(path,options={}){const headers=new Headers(options.headers||{}),accessKey=localStorage.getItem('dsaTrackerAccessKey');if(accessKey)headers.set('X-Access-Key',accessKey);const response=await fetch(path,{...options,headers});if(!response.ok){const text=await response.text();let message=text;try{message=JSON.parse(text).error||text}catch{}throw new Error(message)}return response.json()}
 function readState(){try{const value=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');if(!value||typeof value!=='object')return null;return{problemId:value.problemId==null?null:String(value.problemId),hintLevel:Math.min(4,Math.max(1,Number(value.hintLevel)||1)),history:(Array.isArray(value.history)?value.history:[]).filter((entry)=>entry&&['user','assistant'].includes(entry.role)&&typeof entry.content==='string').slice(-40)}}catch{return null}}
 function saveState(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify({problemId:selectedProblemId,hintLevel,history:history.slice(-40)}))}catch{}}
 function timeStr(){return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
