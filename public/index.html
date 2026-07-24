@@ -85,6 +85,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opa
   <nav class="top-actions" aria-label="Primary navigation">
     <span class="date-label" id="date"></span>
     <a class="nav-link" href="/sheet.html">Explore sheet</a>
+    <a class="nav-link" href="/playlists.html">Playlist progress</a>
     <button class="coach-toggle" id="coachToggle" aria-controls="coachPanel" aria-expanded="true"><span class="spark">✦</span> AI Coach</button>
   </nav>
 </header>
@@ -249,7 +250,7 @@ function render(d){
       <div class="problem-links"><a class="problem-link" href="${esc(it.url)}" target="_blank" rel="noopener">Watch on YouTube ↗</a></div>
       ${it.thumbnail?`<img class="video-thumb" src="${esc(it.thumbnail)}" alt="">`:''}
     </div>
-    <div class="card-side"><div class="problem-actions"><button class="status-btn ${it.status==='completed'?'active':''}" data-video-index="${it.slot-1}" data-video-status="completed">Watched ✓</button><button class="status-btn ${it.status==='attempted'?'active':''}" data-video-index="${it.slot-1}" data-video-status="attempted">Continue later</button><button class="status-btn ${it.revision?'active':''}" data-video-index="${it.slot-1}" data-video-revision="${it.revision?'1':'0'}">${it.revision?'Revision ✓':'Revise later'}</button></div></div>
+    <div class="card-side"><div class="problem-actions"><button class="status-btn ${it.status==='completed'?'active':''}" data-video-playlist="${esc(it.playlistId)}" data-video-position="${it.position}" data-video-status="completed">Watched ✓</button><button class="status-btn ${it.status==='attempted'?'active':''}" data-video-playlist="${esc(it.playlistId)}" data-video-position="${it.position}" data-video-status="attempted">Continue later</button><button class="status-btn ${it.revision?'active':''}" data-video-playlist="${esc(it.playlistId)}" data-video-position="${it.position}" data-video-revision="${it.revision?'1':'0'}">${it.revision?'Revision ✓':'Revise later'}</button></div></div>
   </article>`).join('')||'<div class="empty-card">No playlists yet. Add one below, then choose how many videos to watch each day in Settings.</div>';
   document.getElementById('playlistManager').innerHTML=d.playlists.map((playlist)=>`<div class="history-day"><div><strong>${esc(playlist.title)}</strong> <span class="section-note">${playlist.totalVideos} videos · ${playlist.targetDays}-day target</span></div><div class="problem-links"><a class="problem-link" href="${esc(playlist.url)}" target="_blank" rel="noopener">Open playlist ↗</a><button class="status-btn" data-remove-playlist="${esc(playlist.id)}">Delete playlist</button></div></div>`).join('');
   document.getElementById('addVideoPlaylist').innerHTML='<option value="">Most urgent selected playlist</option>'+d.playlists.filter((playlist)=>d.settings.preferredPlaylistIds.includes(playlist.id)).map((playlist)=>`<option value="${esc(playlist.id)}">${esc(playlist.title)}</option>`).join('');
@@ -265,7 +266,7 @@ function render(d){
 function bindRenderedActions(){
   document.querySelectorAll('.status-btn[data-status]').forEach((btn)=>btn.onclick=async()=>{try{const path=btn.dataset.status==='revision_needed'?`/api/problems/${btn.dataset.id}/revision`:`/api/problems/${btn.dataset.id}/status`;const body=btn.dataset.status==='revision_needed'?{revision:btn.dataset.revision!=='1'}:{status:btn.dataset.status};const r=await api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});render(r.dashboard)}catch(e){alert(e.message)}});
   document.querySelectorAll('[data-hint-id]').forEach((btn)=>btn.onclick=()=>startProblemHint(btn.dataset.hintId));
-  document.querySelectorAll('[data-video-index]').forEach((btn)=>btn.onclick=async()=>{try{const body=btn.dataset.videoStatus?{status:btn.dataset.videoStatus}:{revision:btn.dataset.videoRevision!=='1'};const r=await api(`/api/video-assignment/${btn.dataset.videoIndex}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});render(r.dashboard)}catch(e){alert(e.message)}});
+  document.querySelectorAll('[data-video-playlist]').forEach((btn)=>btn.onclick=async()=>{try{const body={playlistId:btn.dataset.videoPlaylist,position:Number(btn.dataset.videoPosition),...(btn.dataset.videoStatus?{status:btn.dataset.videoStatus}:{revision:btn.dataset.videoRevision!=='1'})};const r=await api('/api/video-progress',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});render(r.dashboard)}catch(e){alert(e.message)}});
 }
 
 function renderSettings(d){

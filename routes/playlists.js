@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const { todayStr } = require('../lib/store');
+const { getDb } = require('../lib/store');
 const { buildDashboard } = require('../lib/dashboard');
 const videos = require('../lib/videos');
 
@@ -26,6 +27,30 @@ router.post('/video-assignment/add', (req, res) => {
 router.post('/video-assignment/regenerate', (req, res) => {
   videos.regenerateVideoAssignment(todayStr());
   res.json({ ok: true, dashboard: buildDashboard() });
+});
+
+router.post('/video-progress', (req, res) => {
+  const body = req.body || {};
+  const result = videos.setVideoProgress(todayStr(), body.playlistId, body.position, body.status, body.revision);
+  if (!result) return res.status(400).json({ error: 'unknown video or invalid status' });
+  res.json({ ok: true, dashboard: buildDashboard() });
+});
+
+router.get('/playlists/progress', (req, res) => {
+  const db = getDb();
+  const playlists = db.playlists.map((playlist) => {
+    const videosList = Array.from({ length: playlist.totalVideos }, (_, offset) => {
+      const position = offset + 1;
+      const progress = videos.progressFor(db, playlist.id, position);
+      return {
+        position, title: playlist.videos?.[offset]?.title || `Video ${position}`,
+        thumbnail: playlist.videos?.[offset]?.thumbnail || '', videoId: playlist.videos?.[offset]?.videoId || '',
+        status: progress.status, revision: progress.revision, timesAssigned: progress.timesAssigned, lastAssignedDate: progress.lastAssignedDate,
+      };
+    });
+    return { id: playlist.id, title: playlist.title, url: playlist.url, targetDays: playlist.targetDays, totalVideos: playlist.totalVideos, done: videosList.filter((video) => video.status === 'completed').length, videos: videosList };
+  });
+  res.json({ playlists });
 });
 
 router.delete('/playlists/:id', (req, res) => {
