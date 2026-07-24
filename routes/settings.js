@@ -38,6 +38,7 @@ router.post('/settings', (req, res) => {
   if ('preferredTopics' in b) s.preferredTopics = validTopics(b.preferredTopics);
   if ('revisionTopics' in b) s.revisionTopics = validTopics(b.revisionTopics);
   if ('provider' in b && ['auto', 'anthropic', 'gemini', 'none'].includes(b.provider)) s.provider = b.provider;
+  if ('coachMode' in b && ['coach', 'interview'].includes(b.coachMode)) s.coachMode = b.coachMode;
   if ('apiKey' in b && b.apiKey !== '••••') s.apiKey = String(b.apiKey || '');
   if ('youtubeApiKey' in b && b.youtubeApiKey !== '••••') s.youtubeApiKey = String(b.youtubeApiKey || '').trim();
   if ('model' in b) s.model = String(b.model || '').trim();
