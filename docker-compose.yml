@@ -7,18 +7,21 @@ services:
     ports:
       - "3210:3210"
     volumes:
-      # Persists db.json (your progress, settings, API keys) on the host.
-      # The file is created automatically on first run from the CSV sheet.
+      # Persists dsa.db (all accounts, progress, settings and keys) on the host.
+      # The database is created automatically on first run.
       - ./data:/data
     environment:
       - PORT=3210
       - DSA_DATA_DIR=/data
-      # Pass API keys as env vars instead of storing them in db.json.
-      # Set these in a .env file (never commit .env to git).
-      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      # Google OAuth credentials — set these in a .env file (never commit it).
+      # Register <APP_URL>/auth/google/callback as an authorized redirect URI.
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      # Set when running behind a proxy/custom domain.
+      - APP_URL=${APP_URL:-}
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3210/api/dashboard"]
+      # /api/auth/me needs no session, so it is a safe liveness probe.
+      test: ["CMD", "wget", "-qO-", "http://localhost:3210/api/auth/me"]
       interval: 30s
       timeout: 5s
       retries: 3
