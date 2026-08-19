@@ -4,8 +4,8 @@
 # Dependencies
 node_modules/
 
-# Runtime data — contains your progress, API keys, and Notion tokens.
-# This is generated from the CSV on first run; never commit it.
+# Runtime data — the SQLite database with every account's progress,
+# API keys and Notion tokens. Created on first run; never commit it.
 data/
 
 # Environment variables (API keys for docker-compose)
@@ -22,4 +22,10 @@ npm-debug.log*
 .vscode/
 .idea/
 *.swp
-scripts/
+
+# Local scratch scripts stay out of the repo, but the migration helper is
+# part of the app and is copied into the Docker image.
+# Note: this must exclude the directory's *contents*, not the directory
+# itself — git cannot re-include a file whose parent directory is excluded.
+scripts/*
+!scripts/import-legacy-db.js
