@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Import from TUF — DSA Studio</title>
+<script src="/auth.js?v=3"></script>
+<style>
+:root{color-scheme:dark;--bg:#020203;--surface:rgba(20,20,26,.72);--line:rgba(255,255,255,.09);--text:#f7f7fa;--text-2:#b0b0bd;--muted:#6f707e;--primary:#8b7cff;--primary-2:#b2a9ff;--cyan:#4de3df;--green:#45dfa0;--red:#ff6680}
+*{box-sizing:border-box}
+body{margin:0;min-height:100dvh;color:var(--text);font:14px/1.5 Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:radial-gradient(circle at 12% 4%,rgba(95,76,220,.11),transparent 29rem),radial-gradient(circle at 72% 70%,rgba(23,111,129,.07),transparent 34rem),var(--bg);background-attachment:fixed}
+.top{height:64px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 24px;position:sticky;top:0;z-index:30;border-bottom:1px solid var(--line);background:rgba(3,3,5,.7);-webkit-backdrop-filter:blur(24px) saturate(135%);backdrop-filter:blur(24px) saturate(135%)}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--text)}
+.brand-mark{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-weight:850;color:#fff;background:linear-gradient(145deg,rgba(162,148,255,.98),rgba(89,68,225,.92));box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 8px 30px rgba(98,76,238,.25)}
+.brand strong{display:block;font-size:14px;letter-spacing:-.02em}.brand small{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.top-actions{display:flex;align-items:center;gap:9px}
+.nav-link{border:1px solid var(--line);background:rgba(255,255,255,.035);border-radius:10px;padding:8px 12px;text-decoration:none;color:var(--text);font-weight:650;font-size:12px}
+.nav-link:hover{border-color:var(--muted)}
+.wrap{max-width:860px;margin:auto;padding:34px 22px 90px}
+.eyebrow{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--primary-2);font-weight:800}
+h1{margin:6px 0 8px;font-size:clamp(26px,4vw,36px);letter-spacing:-.04em}
+.sub{color:var(--text-2);margin:0 0 30px;max-width:60ch}
+.step{position:relative;padding:22px 24px;border:1px solid var(--line);border-radius:18px;margin-bottom:16px;background:linear-gradient(145deg,rgba(20,20,26,.72),rgba(8,8,11,.56));box-shadow:inset 0 1px 0 rgba(255,255,255,.055),0 20px 50px rgba(0,0,0,.26);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px)}
+.step-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.step-num{width:28px;height:28px;flex:none;border-radius:9px;display:grid;place-items:center;font-size:12px;font-weight:800;background:rgba(139,124,255,.14);color:var(--primary-2)}
+.step-head h2{margin:0;font-size:16px;letter-spacing:-.02em}
+.step p{color:var(--text-2);margin:0 0 14px}
+code.inline{background:rgba(255,255,255,.06);border-radius:5px;padding:1px 6px;font-size:12.5px}
+pre{margin:0;max-height:230px;overflow:auto;padding:14px;border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.42);font:11.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfd0e0;white-space:pre}
+.snippet-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+button,.btn{border:1px solid var(--line);background:rgba(255,255,255,.035);color:var(--text);border-radius:10px;padding:9px 13px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;transition:.16s ease}
+button:hover,.btn:hover{border-color:var(--muted);transform:translateY(-1px)}
+button.primary{border:0;color:#fff;background:linear-gradient(135deg,#9385ff,#6755df);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 9px 28px rgba(89,65,216,.24)}
+button:disabled{opacity:.45;cursor:default;transform:none}
+.drop{display:grid;place-items:center;gap:8px;padding:32px 20px;border:1px dashed var(--line);border-radius:14px;text-align:center;color:var(--muted);cursor:pointer;transition:.16s ease}
+.drop:hover,.drop.over{border-color:var(--primary);color:var(--text-2);background:rgba(139,124,255,.05)}
+.drop strong{color:var(--text);font-size:14px}
+.file-name{color:var(--cyan);font-weight:700}
+.mode{display:flex;gap:9px;align-items:flex-start;margin:16px 0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02)}
+.mode input{margin-top:3px;accent-color:var(--primary)}
+.mode label{font-size:12.5px;color:var(--text-2)}
+.mode label b{color:var(--text);display:block;font-size:13px;margin-bottom:2px}
+.result{margin-top:16px;padding:16px 18px;border-radius:14px;border:1px solid var(--line);display:none}
+.result.ok{display:block;border-color:color-mix(in srgb,var(--green) 32%,transparent);background:color-mix(in srgb,var(--green) 8%,transparent)}
+.result.bad{display:block;border-color:color-mix(in srgb,var(--red) 32%,transparent);background:color-mix(in srgb,var(--red) 8%,transparent);color:#ffb3c0}
+.result h3{margin:0 0 10px;font-size:14px}
+.figures{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-top:4px}
+.figure{padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04)}
+.figure b{display:block;font-size:20px;font-weight:800;letter-spacing:-.02em}
+.figure span{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.result .btn{margin-top:14px;display:inline-block}
+.warn{font-size:12px;color:var(--muted);margin-top:12px}
+@media(max-width:640px){.top{padding:0 14px}.wrap{padding:22px 14px 70px}.step{padding:18px 16px}.brand small{display:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/">
+    <span class="brand-mark">A²</span>
+    <span><strong>DSA Studio</strong><small>Striver A2Z workspace</small></span>
+  </a>
+  <nav class="top-actions">
+    <a class="nav-link" href="/">← Dashboard</a>
+  </nav>
+</header>
+
+<main class="wrap">
+  <div class="eyebrow">Progress import</div>
+  <h1>Bring your progress from takeuforward</h1>
+  <p class="sub">Run one snippet in your browser console on the TUF sheet, then upload the CSV it downloads. Everything you have already ticked off there becomes completed here — your daily assignments, streaks and coach pick up from that point.</p>
+
+  <section class="step">
+    <div class="step-head"><span class="step-num">1</span><h2>Open the A2Z sheet on takeuforward.org</h2></div>
+    <p>Sign in there and open the <a href="https://takeuforward.org/strivers-a2z-dsa-course/strivers-a2z-dsa-course-sheet-2" target="_blank" rel="noopener" style="color:var(--primary-2)">Striver A2Z sheet ↗</a> so your ticks are visible on screen.</p>
+  </section>
+
+  <section class="step">
+    <div class="step-head"><span class="step-num">2</span><h2>Paste this in the browser console</h2></div>
+    <p>Press <code class="inline">F12</code> (or <code class="inline">⌥⌘J</code> on Mac), open the <b>Console</b> tab, paste the script and hit Enter. It opens each section, reads your checkboxes, and downloads <code class="inline">striver_a2z_complete_sheet.csv</code>. Leave the tab in front while it runs — it takes a few seconds.</p>
+    <pre id="snippet">Loading snippet…</pre>
+    <div class="snippet-actions">
+      <button class="primary" id="copy" type="button">Copy snippet</button>
+      <a class="btn" href="/tuf-export.js" download="tuf-export.js">Download as file</a>
+      <span id="copied" style="font-size:12px;color:var(--green)"></span>
+    </div>
+    <p class="warn">Chrome may ask you to type <code class="inline">allow pasting</code> in the console the first time before it accepts pasted code.</p>
+  </section>
+
+  <section class="step">
+    <div class="step-head"><span class="step-num">3</span><h2>Upload the CSV here</h2></div>
+    <div class="drop" id="drop">
+      <strong>Choose the CSV or drop it here</strong>
+      <span id="fileLabel">striver_a2z_complete_sheet.csv</span>
+    </div>
+    <input type="file" id="file" accept=".csv,text/csv" hidden>
+
+    <div class="mode">
+      <input type="checkbox" id="replace">
+      <label for="replace">
+        <b>Mirror TUF exactly</b>
+        Also un-complete problems that are <i>unticked</i> on TUF. Leave this off to only add progress and keep anything you have already completed here.
+      </label>
+    </div>
+
+    <button class="primary" id="upload" type="button" disabled>Import progress</button>
+    <div class="result" id="result"></div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let csvText = '';
+
+fetch('/tuf-export.js')
+  .then((r) => r.text())
+  .then((text) => { $('snippet').textContent = text; })
+  .catch(() => { $('snippet').textContent = 'Could not load the snippet — open /tuf-export.js directly.'; });
+
+$('copy').onclick = async () => {
+  try {
+    await navigator.clipboard.writeText($('snippet').textContent);
+    $('copied').textContent = 'Copied to clipboard';
+  } catch {
+    // Clipboard is blocked outside a secure context — select it instead.
+    const range = document.createRange();
+    range.selectNodeContents($('snippet'));
+    const selection = getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    $('copied').textContent = 'Selected — press ⌘/Ctrl+C';
+  }
+  setTimeout(() => { $('copied').textContent = ''; }, 3000);
+};
+
+const drop = $('drop');
+drop.onclick = () => $('file').click();
+drop.ondragover = (e) => { e.preventDefault(); drop.classList.add('over'); };
+drop.ondragleave = () => drop.classList.remove('over');
+drop.ondrop = (e) => {
+  e.preventDefault();
+  drop.classList.remove('over');
+  if (e.dataTransfer.files[0]) takeFile(e.dataTransfer.files[0]);
+};
+$('file').onchange = (e) => { if (e.target.files[0]) takeFile(e.target.files[0]); };
+
+async function takeFile(file) {
+  csvText = await file.text();
+  $('fileLabel').innerHTML = `<span class="file-name">${file.name}</span> · ${(file.size / 1024).toFixed(0)} KB ready`;
+  $('upload').disabled = false;
+}
+
+$('upload').onclick = async () => {
+  const box = $('result');
+  $('upload').disabled = true;
+  $('upload').textContent = 'Importing…';
+  box.className = 'result';
+  try {
+    const response = await fetch('/api/import/tuf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ csv: csvText, mode: $('replace').checked ? 'replace' : 'merge' }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Import failed');
+
+    box.className = 'result ok';
+    box.innerHTML = `
+      <h3>Progress imported</h3>
+      <div class="figures">
+        <div class="figure"><b>${data.matched}</b><span>Matched</span></div>
+        <div class="figure"><b>${data.newlyCompleted}</b><span>Newly completed</span></div>
+        <div class="figure"><b>${data.flagged}</b><span>Flagged revision</span></div>
+        ${data.reopened ? `<div class="figure"><b>${data.reopened}</b><span>Reopened</span></div>` : ''}
+        ${data.unknown ? `<div class="figure"><b>${data.unknown}</b><span>Not in sheet</span></div>` : ''}
+      </div>
+      <a class="btn" href="/">Go to today’s plan →</a>`;
+  } catch (error) {
+    box.className = 'result bad';
+    box.textContent = error.message;
+  } finally {
+    $('upload').disabled = false;
+    $('upload').textContent = 'Import progress';
+  }
+};
+</script>
+</body>
+</html>

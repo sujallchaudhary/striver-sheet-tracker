@@ -12,6 +12,7 @@
   "type": "commonjs",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
+    "better-sqlite3": "^13.0.3",
     "express": "^5.2.1",
     "puppeteer": "^25.3.0"
   }
